@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix my-react-app run dev",
+    "server": "npm --prefix my-react-app run server",
+    "seed": "npm --prefix my-react-app run seed",
+    "build": "npm --prefix my-react-app run build",
+    "lint": "npm --prefix my-react-app run lint"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.18.2"
+  }
+}

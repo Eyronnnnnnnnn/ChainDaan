@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  color: #11265f;
+  background: #fff;
+}
+
+* { box-sizing: border-box; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
