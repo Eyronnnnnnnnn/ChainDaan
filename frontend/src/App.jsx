@@ -6,6 +6,7 @@ import SupplierDashboard from "./pages/SupplierDashboard.jsx";
 import BusinessDashboard from "./pages/BusinessDashboard.jsx";
 import BusinessProfile from "./pages/BusinessProfile.jsx";
 import Legal from "./pages/Legal.jsx";
+import { readJsonResponse } from "./api/client.js";
 
 const Icon = ({ children, size = 22 }) => (
   <svg
@@ -93,8 +94,9 @@ function Home() {
       }),
     })
       .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Feedback could not be sent.");
+        const data = await readJsonResponse(response);
+        if (!response.ok)
+          throw new Error(data?.error || "Feedback could not be sent.");
         setFeedbackSent(true);
         event.currentTarget.reset();
       })

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import { MailIcon, MapPinIcon, PackageIcon, PhoneIcon, StoreIcon, UserIcon } from "../components/Icons.jsx";
+import { readJsonResponse } from "../api/client.js";
 
 const benefits = [
   "Access 500+ verified local suppliers",
@@ -94,8 +95,9 @@ export default function Login() {
     setError("");
     try {
       const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, role }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Registration failed.");
+      const data = await readJsonResponse(response);
+      if (!response.ok)
+        throw new Error(data?.error || "Registration failed.");
       localStorage.setItem("chaindaan_token", data.token);
       localStorage.setItem("chaindaan_user", JSON.stringify(data.user));
       navigate(role === "business" ? "/business-dashboard" : "/supplier-dashboard");
@@ -191,8 +193,8 @@ export function SignIn() {
     setError("");
     try {
       const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, role }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Login failed.");
+      const data = await readJsonResponse(response);
+      if (!response.ok) throw new Error(data?.error || "Login failed.");
       localStorage.setItem("chaindaan_token", data.token);
       localStorage.setItem("chaindaan_user", JSON.stringify(data.user));
       navigate(role === "business" ? "/business-dashboard" : "/supplier-dashboard");

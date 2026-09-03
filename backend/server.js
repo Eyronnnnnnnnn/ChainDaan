@@ -816,9 +816,15 @@ app.post(
     response.status(201).json(await Sale.create(request.body)),
   ),
 );
-app.use((error, _request, response) =>
-  response.status(400).json({ error: error.message }),
-); 
+app.use((error, _request, response, _next) => {
+  console.error("Request failed:", error);
+  if (response.headersSent) return;
+
+  const status = error?.statusCode || error?.status || 400;
+  response.status(status >= 400 && status < 600 ? status : 500).json({
+    error: error?.message || "The request could not be processed.",
+  });
+});
 
 if (!mongoUri) {
   console.error(

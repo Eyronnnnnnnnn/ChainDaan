@@ -1,5 +1,16 @@
 const API_URL = import.meta.env.VITE_API_URL || "";
 
+export async function readJsonResponse(response) {
+  const body = await response.text();
+  if (!body) return null;
+
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error("The server returned an invalid response. Please try again.");
+  }
+}
+
 async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
   const token = localStorage.getItem("chaindaan_token");
@@ -7,7 +18,7 @@ async function request(path, options = {}) {
   if (options.body && !(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
   const response = await fetch(`${API_URL}${path}`, { ...options, headers });
-  const data = response.status === 204 ? null : await response.json();
+  const data = await readJsonResponse(response);
   if (!response.ok) throw new Error(data?.error || "Request failed.");
   return data;
 }
