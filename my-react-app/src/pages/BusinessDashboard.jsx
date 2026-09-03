@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import "./SupplierDashboard.css";
 import { chatApi, orderApi, profileApi, request } from "../api/client.js";
 import { getCurrentUser, logout } from "../lib/session.js";
+import { mergeMessages } from "../lib/chat.js";
 import Avatar from "../components/Avatar.jsx";
 import ProductImageCarousel from "../components/ProductImageCarousel.jsx";
 import OrderModal from "../components/OrderModal.jsx";
@@ -236,6 +237,7 @@ export default function BusinessDashboard() {
         )}
         {activeView === "My Profile" && (
           <BusinessProfile
+            key={user?._id || "business-profile"}
             user={user}
             onUserUpdated={setUser}
             profileSaved={profileSaved}
@@ -592,7 +594,7 @@ function BusinessOrders({ currentUser, onOrdersCountChange, onMessageSupplier })
       cancelled = true;
       socket.disconnect();
     };
-  }, [currentUser._id]);
+  }, [currentUser._id, onOrdersCountChange]);
 
   async function cancelOrder(orderId) {
     if (!window.confirm("Are you sure you want to cancel this order inquiry?")) return;
@@ -788,6 +790,7 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [onlineUserIds, setOnlineUserIds] = useState([]);
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -823,7 +826,7 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
     chatApi
       .messages(conversation._id)
       .then((result) => {
-        if (!cancelled) setMessages(result);
+        if (!cancelled) setMessages((current) => mergeMessages(current, result));
       })
       .catch((requestError) => setError(requestError.message));
 
@@ -831,6 +834,14 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
       auth: { token: localStorage.getItem("chaindaan_token") },
     });
     socketRef.current = socket;
+    socket.on("presence:init", (userIds) => setOnlineUserIds(userIds));
+    socket.on("presence:update", ({ userId, online }) => {
+      setOnlineUserIds((current) =>
+        online
+          ? current.includes(userId) ? current : [...current, userId]
+          : current.filter((id) => id !== userId)
+      );
+    });
 
     socket.on("connect", () => {
       socket.emit("joinConversation", conversation._id);
@@ -839,9 +850,7 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
 
     socket.on("message", (incoming) => {
       if (incoming.conversationId === conversation._id) {
-        setMessages((current) =>
-          current.some((item) => item._id === incoming._id) ? current : [...current, incoming]
-        );
+        setMessages((current) => mergeMessages(current, incoming));
         socket.emit("markSeen", { conversationId: conversation._id });
       }
     });
@@ -893,9 +902,7 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
     }
     try {
       const sent = await chatApi.sendMessage(conversation._id, supplier._id, message);
-      setMessages((current) =>
-        current.some((item) => item._id === sent._id) ? current : [...current, sent]
-      );
+      setMessages((current) => mergeMessages(current, sent));
       setMessage("");
     } catch (requestError) {
       setError(requestError.message);
@@ -942,6 +949,13 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
             </button>
           );
         })}
+        {otherConversations.length === 0 && (
+          <div className="chat-empty-list">
+            <MessageSquareIcon size={22} />
+            <strong>No conversations yet</strong>
+            <span>Start a chat from a supplier profile.</span>
+          </div>
+        )}
       </section>
 
       <section className="conversation">
@@ -952,14 +966,18 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
               <h3>{supplier?.name || "Select a supplier"}</h3>
               {supplier && <VerifiedBadgeIcon size={16} />}
             </div>
-            <span>
-              <i /> Live supplier chat
+            <span className={onlineUserIds.includes(supplier?._id) ? "presence online" : "presence"}>
+              <i /> {onlineUserIds.includes(supplier?._id) ? "Online now" : "Offline"}
             </span>
           </div>
         </header>
         <div className="chat-messages">
           {messages.length === 0 ? (
-            <div className="message-date">START A CONVERSATION</div>
+            <div className="conversation-empty">
+              <div className="conversation-empty-icon"><MessageSquareIcon size={22} /></div>
+              <strong>{supplier ? "Start the conversation" : "Choose a supplier"}</strong>
+              <span>{supplier ? `Send a message to ${supplier.name}.` : "Select a supplier to view messages."}</span>
+            </div>
           ) : (
             messages.map((item) => {
               const isMine = item.senderId === currentUser._id;
@@ -1025,10 +1043,6 @@ function BusinessProfile({ user, onUserUpdated, profileSaved, setProfileSaved })
   const [activeTab, setActiveTab] = useState("edit"); // "edit" | "preview"
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-
-  useEffect(() => {
-    setProfile(user || {});
-  }, [user]);
 
   const update = (field) => (event) => {
     setProfile((current) => ({ ...current, [field]: event.target.value }));

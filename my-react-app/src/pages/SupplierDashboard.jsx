@@ -4,6 +4,7 @@ import { Line } from "react-chartjs-2";
 import { io } from "socket.io-client";
 import "./SupplierDashboard.css";
 import { getCurrentUser, logout } from "../lib/session.js";
+import { mergeMessages } from "../lib/chat.js";
 import { chatApi, orderApi, productApi, profileApi } from "../api/client.js";
 import ProfilePictureUpload from "../components/ProfilePictureUpload.jsx";
 import Avatar from "../components/Avatar.jsx";
@@ -63,6 +64,7 @@ export default function SupplierDashboard() {
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
+  const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [message, setMessage] = useState("");
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -96,6 +98,14 @@ export default function SupplierDashboard() {
 
     const socket = io(socketUrl, {
       auth: { token: localStorage.getItem("chaindaan_token") },
+    });
+    socket.on("presence:init", (userIds) => setOnlineUserIds(userIds));
+    socket.on("presence:update", ({ userId, online }) => {
+      setOnlineUserIds((current) =>
+        online
+          ? current.includes(userId) ? current : [...current, userId]
+          : current.filter((id) => id !== userId)
+      );
     });
     socket.on("newOrder", (newOrder) => {
       setOrders((current) => [newOrder, ...current.filter((o) => o._id !== newOrder._id)]);
@@ -143,7 +153,7 @@ export default function SupplierDashboard() {
     if (!selectedChat?.conversationId) return undefined;
     let cancelled = false;
     chatApi.messages(selectedChat.conversationId).then((messages) => {
-      if (!cancelled) setChatMessages(messages);
+      if (!cancelled) setChatMessages((current) => mergeMessages(current, messages));
     });
     const socket = io(socketUrl, {
       auth: { token: localStorage.getItem("chaindaan_token") },
@@ -154,9 +164,7 @@ export default function SupplierDashboard() {
     });
     socket.on("message", (incoming) => {
       if (incoming.conversationId === selectedChat.conversationId) {
-        setChatMessages((current) =>
-          current.some((item) => item._id === incoming._id) ? current : [...current, incoming]
-        );
+        setChatMessages((current) => mergeMessages(current, incoming));
         socket.emit("markSeen", { conversationId: selectedChat.conversationId });
       }
     });
@@ -182,9 +190,7 @@ export default function SupplierDashboard() {
       selectedChat.recipientId,
       message
     );
-    setChatMessages((current) =>
-      current.some((item) => item._id === sent._id) ? current : [...current, sent]
-    );
+    setChatMessages((current) => mergeMessages(current, sent));
     setChats((current) =>
       current.map((chat) =>
         chat.id === selectedChat.id ? { ...chat, preview: `You: ${message}`, time: "Just now" } : chat
@@ -311,7 +317,6 @@ export default function SupplierDashboard() {
             setShowAddProduct={setShowAddProduct}
             user={user}
             pendingOrdersCount={pendingOrdersCount}
-            onMessageBuyer={handleMessageBuyer}
           />
         )}
         {activeView === "My Products" && (
@@ -340,11 +345,13 @@ export default function SupplierDashboard() {
             setSelectedChat={setSelectedChat}
             sendMessage={sendMessage}
             currentUser={user}
+            onlineUserIds={onlineUserIds}
           />
         )}
         {activeView === "Sales Overview" && <SupplierSales products={products} orders={orders} />}
         {activeView === "My Profile" && (
           <Profile
+            key={user?._id || "supplier-profile"}
             user={user}
             onUserUpdated={setUser}
             profileSaved={profileSaved}
@@ -364,7 +371,7 @@ export default function SupplierDashboard() {
   );
 }
 
-function Overview({ products, orders = [], setActiveView, setShowAddProduct, user, pendingOrdersCount, onMessageBuyer }) {
+function Overview({ products, orders = [], setActiveView, setShowAddProduct, user, pendingOrdersCount }) {
   const currentUser = user || getCurrentUser() || {};
 
   return (
@@ -716,18 +723,6 @@ function Metric({ label, value, change, icon }) {
   );
 }
 
-function Activity({ icon, title, time }) {
-  return (
-    <div className="activity-row">
-      <span className="activity-icon">{icon}</span>
-      <div>
-        <b>{title}</b>
-        <small>{time}</small>
-      </div>
-    </div>
-  );
-}
-
 function ProductRow({ product }) {
   return (
     <div className="product-row">
@@ -833,6 +828,7 @@ function Messages({
   setMessage,
   sendMessage,
   currentUser = getCurrentUser() || {},
+  onlineUserIds = [],
 }) {
   const [isTyping, setIsTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -932,6 +928,13 @@ function Messages({
             <small>{chat.time}</small>
           </button>
         ))}
+        {filteredChats.length === 0 && (
+          <div className="chat-empty-list">
+            <MessageSquareIcon size={22} />
+            <strong>{searchTerm ? "No matches found" : "No conversations yet"}</strong>
+            <span>{searchTerm ? "Try another name." : "Messages from businesses will appear here."}</span>
+          </div>
+        )}
       </section>
       <section className="conversation">
         <header className="conversation-head">
@@ -945,14 +948,18 @@ function Messages({
               <h3>{selectedChat?.name || "No conversations yet"}</h3>
               {selectedChat && <VerifiedBadgeIcon size={16} />}
             </div>
-            <span>
-              <i /> Live business chat
+            <span className={onlineUserIds.includes(selectedChat?.recipientId) ? "presence online" : "presence"}>
+              <i /> {onlineUserIds.includes(selectedChat?.recipientId) ? "Online now" : "Offline"}
             </span>
           </div>
         </header>
         <div className="chat-messages">
           {chatMessages.length === 0 ? (
-            <div className="message-date">NO MESSAGES YET</div>
+            <div className="conversation-empty">
+              <div className="conversation-empty-icon"><MessageSquareIcon size={22} /></div>
+              <strong>{selectedChat ? "Start the conversation" : "Choose a conversation"}</strong>
+              <span>{selectedChat ? `Send a message to ${selectedChat.name}.` : "Select a business to view messages."}</span>
+            </div>
           ) : (
             chatMessages.map((item) => {
               const isMine = item.senderId === currentUser._id;
@@ -1147,10 +1154,6 @@ function SupplierSales({ products, orders = [] }) {
 function Profile({ user, onUserUpdated, profileSaved, setProfileSaved }) {
   const [profile, setProfile] = useState(user);
   const [activeTab, setActiveTab] = useState("edit"); // "edit" | "preview"
-
-  useEffect(() => {
-    setProfile(user);
-  }, [user]);
 
   const update = (field) => (event) =>
     setProfile((current) => ({ ...current, [field]: event.target.value }));

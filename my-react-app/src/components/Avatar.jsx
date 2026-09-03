@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getInitials } from "../lib/session.js";
 
 export default function Avatar({
@@ -13,11 +13,8 @@ export default function Avatar({
   const photoUrl = src || user?.profilePhotoUrl;
   const displayName = name || user?.name || user?.fullName || "User";
   const initials = getInitials(user || { name: displayName });
-  const [imgError, setImgError] = useState(false);
-
-  useEffect(() => {
-    setImgError(false);
-  }, [photoUrl]);
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState(null);
+  const imgError = failedPhotoUrl === photoUrl;
 
   const sizeClass =
     size === "small"
@@ -40,7 +37,7 @@ export default function Avatar({
         <img
           src={photoUrl}
           alt={displayName || alt}
-          onError={() => setImgError(true)}
+          onError={() => setFailedPhotoUrl(photoUrl)}
           loading="lazy"
         />
       ) : (

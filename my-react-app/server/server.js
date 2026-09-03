@@ -170,6 +170,7 @@ const Product = mongoose.model("Product", productSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
 const Message = mongoose.model("Message", messageSchema);
 const Sale = mongoose.model("Sale", saleSchema);
+const onlineUsers = new Map();
 
 const asyncRoute = (handler) => (request, response, next) =>
   Promise.resolve(handler(request, response, next)).catch(next);
@@ -570,10 +571,10 @@ app.post(
         .json({ error: "Choose another participant." });
     const participant = await Profile.findOne({
       _id: participantId,
-      role: "supplier",
+      role: { $ne: request.auth.role },
     });
     if (!participant)
-      return response.status(404).json({ error: "Supplier not found." });
+      return response.status(404).json({ error: "User not found or cannot be contacted." });
     let conversation = await Conversation.findOne({
       participantIds: { $all: [request.auth.sub, participantId] },
       $expr: { $eq: [{ $size: "$participantIds" }, 2] },
@@ -788,9 +789,9 @@ app.post(
     response.status(201).json(await Sale.create(request.body)),
   ),
 );
-app.use((error, _request, response, _next) =>
+app.use((error, _request, response) =>
   response.status(400).json({ error: error.message }),
-); // eslint-disable-line no-unused-vars
+); 
 
 if (!mongoUri) {
   console.error(
@@ -809,6 +810,10 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
   socket.join(socket.auth.sub);
+  const connectionCount = onlineUsers.get(socket.auth.sub) || 0;
+  onlineUsers.set(socket.auth.sub, connectionCount + 1);
+  socket.emit("presence:init", [...onlineUsers.keys()]);
+  io.emit("presence:update", { userId: socket.auth.sub, online: true });
   socket.on("joinConversation", (conversationId) =>
     socket.join(conversationId),
   );
@@ -840,6 +845,15 @@ io.on("connection", (socket) => {
     } catch {
       // ignore
     }
+  });
+  socket.on("disconnect", () => {
+    const remainingConnections = (onlineUsers.get(socket.auth.sub) || 1) - 1;
+    if (remainingConnections > 0) {
+      onlineUsers.set(socket.auth.sub, remainingConnections);
+      return;
+    }
+    onlineUsers.delete(socket.auth.sub);
+    io.emit("presence:update", { userId: socket.auth.sub, online: false });
   });
 });
 
