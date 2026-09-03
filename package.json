@@ -1,13 +1,11 @@
 {
   "private": true,
   "scripts": {
-    "dev": "npm --prefix my-react-app run dev",
-    "server": "npm --prefix my-react-app run server",
-    "seed": "npm --prefix my-react-app run seed",
-    "build": "npm --prefix my-react-app run build",
-    "lint": "npm --prefix my-react-app run lint"
-  },
-  "dependencies": {
-    "react-router-dom": "^7.18.2"
+    "dev": "npm --prefix frontend run dev",
+    "server": "npm --prefix backend run server",
+    "seed": "npm --prefix backend run seed",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "install:all": "npm --prefix frontend install && npm --prefix backend install"
   }
 }

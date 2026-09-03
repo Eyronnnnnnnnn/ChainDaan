@@ -1,5 +1,5 @@
 {
-  "name": "my-react-app",
+  "name": "chaindaan-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,23 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "server": "node server/server.js",
-    "seed": "node server/seed.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
-    "cloudinary": "^2.11.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mongoose": "^9.9.4",
-    "multer": "^2.2.0",
     "react": "^19.2.8",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
-    "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
