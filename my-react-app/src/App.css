@@ -5,6 +5,9 @@
   --pale: #eef3ff;
   --muted: #647493;
 }
+html { scroll-behavior: smooth; }
+.site-shell section,
+.site-shell footer { scroll-margin-top: 80px; }
 .site-shell {
   overflow: hidden;
 }
@@ -341,6 +344,20 @@ h2 strong {
 .products-section { padding: 68px max(32px, calc((100% - 1280px) / 2)); background: #fff; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 28px; }.section-heading h2 { margin: 0; color: var(--navy); font-size: 32px; }.section-heading a { color: var(--blue); font-weight: 700; }.section-heading a span { font-size: 24px; vertical-align: -2px; }
 .products-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }.product-card { overflow: hidden; border: 1px solid #e3e8f3; border-radius: 12px; background: white; }.product-image { width: 100%; height: 160px; }.product-info { padding: 16px; }.product-info small { color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }.product-info h3 { margin: 6px 0 4px; color: var(--navy); font-size: 15px; }.product-info p { margin-bottom: 14px; color: #93a0b8; font-size: 12px; }.product-bottom { display: flex; justify-content: space-between; align-items: center; }.product-bottom strong { color: var(--blue); }.product-bottom .button { padding: 7px 13px; border-radius: 8px; font-size: 12px; }
+.contact-section { display: grid; grid-template-columns: .9fr 1.1fr; gap: 70px; align-items: start; padding: 72px max(32px, calc((100% - 1100px) / 2)); background: #f4f7ff; }
+.contact-copy { max-width: 460px; }
+.contact-copy h2 { margin: 0 0 14px; color: var(--navy); font-size: 36px; line-height: 1.15; }
+.contact-copy > p { color: var(--muted); line-height: 1.65; }
+.developer-email { display: inline-block; margin-top: 8px; color: var(--blue); font-weight: 700; }
+.developer-handle { display: block; margin-top: 18px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.feedback-form { display: grid; gap: 14px; padding: 24px; border: 1px solid #dbe4f7; border-radius: 14px; background: rgba(255, 255, 255, .72); box-shadow: 0 8px 24px rgba(31, 84, 217, .08); }
+.feedback-form label { display: grid; gap: 6px; color: var(--navy); font-size: 11px; font-weight: 700; }
+.feedback-form input, .feedback-form textarea { width: 100%; min-width: 0; border: 1px solid #dfe6f3; border-radius: 8px; padding: 11px 12px; outline: 0; color: var(--navy); background: white; font: inherit; font-size: 13px; resize: vertical; }
+.feedback-form input:focus, .feedback-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(33, 85, 217, .12); }
+.feedback-form .button { justify-self: start; }
+.feedback-success { margin: 0; color: #1e874b; font-size: 12px; }
+.feedback-form input,
+.feedback-form textarea { font-weight: 400; }
 .cta-section {
   padding: 57px 24px;
   color: white;
@@ -366,14 +383,17 @@ footer {
   display: flex;
   justify-content: space-between;
   gap: 30px;
-  padding: 38px max(32px, calc((100% - 1280px) / 2));
+  width: 100%;
+  min-height: 118px;
+  padding: 46px max(48px, calc((100% - 1380px) / 2));
   color: #7586b5;
   background: #111f59;
-  font-size: 13px;
+  font-size: 14px;
 }
 footer div {
   display: flex;
-  gap: 25px;
+  gap: 34px;
+  flex-wrap: wrap;
 }
 @media (max-width: 950px) {
   .site-header {
@@ -456,7 +476,8 @@ footer div {
   }
   .feature-grid,
   .stats-section,
-  .how-section {
+  .how-section,
+  .contact-section {
     grid-template-columns: 1fr;
   }
   .feature-card {
@@ -491,12 +512,42 @@ footer div {
     margin-left: 0;
     margin-right: 0;
   }
+  .contact-section { gap: 28px; padding: 48px 18px; }
+  .contact-copy h2 { font-size: 31px; }
+  .feedback-form { padding: 18px; }
   footer {
     flex-direction: column;
-    padding: 28px 20px;
+    padding: 36px 20px;
   }
   footer div {
     flex-wrap: wrap;
     gap: 15px;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-header {
+    gap: 12px;
+  }
+  .header-actions {
+    gap: 6px;
+  }
+  .header-actions .button {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+  .hero-section {
+    padding: 36px 16px 44px;
+  }
+  h1 {
+    font-size: 34px;
+  }
+  .tracking-box {
+    padding: 16px;
+  }
+  .feature-section,
+  .products-section {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }

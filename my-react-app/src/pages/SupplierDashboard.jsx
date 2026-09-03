@@ -557,22 +557,21 @@ function SupplierOrders({ orders, setOrders, onMessageBuyer }) {
 
       <div className="orders-toolbar">
         <div className="orders-filter-pills">
-          {["all", "pending", "confirmed", "completed", "cancelled"].map((st) => (
+          {[
+            ["all", "All", GridIcon],
+            ["pending", "Pending approval", ClockIcon],
+            ["confirmed", "Confirmed / preparing", CheckIcon],
+            ["completed", "Delivered", PackageIcon],
+            ["cancelled", "Declined", XIcon],
+          ].map(([st, label, Icon]) => (
             <button
               key={st}
               className={filter === st ? "active" : ""}
               onClick={() => setFilter(st)}
               type="button"
             >
-              {st === "all"
-                ? `All (${orders.length})`
-                : st === "pending"
-                ? `Pending Approval (${orders.filter((o) => o.status === "pending").length})`
-                : st === "confirmed"
-                ? `Confirmed / Preparing (${orders.filter((o) => o.status === "confirmed").length})`
-                : st === "completed"
-                ? `Delivered (${orders.filter((o) => o.status === "completed").length})`
-                : `Declined (${orders.filter((o) => o.status === "cancelled").length})`}
+              <Icon size={13} />
+              {label} {st === "all" ? orders.length : orders.filter((o) => o.status === st).length}
             </button>
           ))}
         </div>

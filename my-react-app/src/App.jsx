@@ -5,6 +5,7 @@ import Login, { SignIn } from "./pages/Login.jsx";
 import SupplierDashboard from "./pages/SupplierDashboard.jsx";
 import BusinessDashboard from "./pages/BusinessDashboard.jsx";
 import BusinessProfile from "./pages/BusinessProfile.jsx";
+import Legal from "./pages/Legal.jsx";
 
 const Icon = ({ children, size = 22 }) => (
   <svg
@@ -54,6 +55,8 @@ function ImageSlot({ src, alt, className = "" }) {
 function Home() {
   const [trackingNumber, setTrackingNumber] = useState("");
   const [trackingMessage, setTrackingMessage] = useState("");
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
   const features = [
     [
       "For Businesses",
@@ -76,6 +79,27 @@ function Home() {
       "truck",
     ],
   ];
+  function submitFeedback(event) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setFeedbackError("");
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: formData.get("name"),
+        email: formData.get("email"),
+        message: formData.get("message"),
+      }),
+    })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Feedback could not be sent.");
+        setFeedbackSent(true);
+        event.currentTarget.reset();
+      })
+      .catch((error) => setFeedbackError(error.message));
+  }
   return (
     <div className="site-shell">
       <header className="site-header">
@@ -207,7 +231,7 @@ function Home() {
             ))}
           </div>
         </section>
-        <section className="stats-section">
+        <section className="stats-section" id="suppliers">
           <div className="stat">
             <b>20+</b>
             <span>Municipalities Covered</span>
@@ -274,6 +298,23 @@ function Home() {
           <div className="section-heading"><div><p className="eyebrow">FEATURED</p><h2>Popular Products</h2></div><a href="#suppliers">View All <span>›</span></a></div>
           <div className="products-grid">{products.map(([name, category, supplier, price, image]) => <article className="product-card" key={name}><ImageSlot src={`/images/${image}`} alt={name} className="product-image" /><div className="product-info"><small>{category}</small><h3>{name}</h3><p>{supplier}</p><div className="product-bottom"><strong>{price}</strong><button className="button button-gold" type="button">Add</button></div></div></article>)}</div>
         </section>
+        <section className="contact-section" id="contact">
+          <div className="contact-copy">
+            <p className="eyebrow">GET IN TOUCH</p>
+            <h2>Contact the developer</h2>
+            <p>Have a question, found an issue, or have an idea for Chain Daan? Send your feedback directly to the development team.</p>
+            <span className="developer-handle">Developer</span>
+            <a className="developer-email" href="mailto:aaronguillermo.dev@gmail.com">aaronguillermo.dev@gmail.com</a>
+          </div>
+          <form className="feedback-form" onSubmit={submitFeedback}>
+            <label><span>Your name</span><input name="name" required placeholder="Juan dela Cruz" /></label>
+            <label><span>Email address</span><input name="email" type="email" required placeholder="you@example.com" /></label>
+            <label><span>Feedback</span><textarea name="message" required rows="4" placeholder="Tell us how we can improve Chain Daan..." /></label>
+            {feedbackSent && <p className="feedback-success" role="status">Your feedback was sent to the developer.</p>}
+            {feedbackError && <p className="form-error" role="alert">{feedbackError}</p>}
+            <button className="button button-blue" type="submit">Send feedback <span>›</span></button>
+          </form>
+        </section>
         <section className="cta-section" id="register">
           <h2>
             Ready to grow your business
@@ -296,12 +337,12 @@ function Home() {
       </main>
       <footer>
         <span>
-          © 2024 Chain Daan. All rights reserved. Connecting Businesses in
+          © 2026 Chain Daan. All rights reserved. Connecting Businesses in
           Ilocos Norte.
         </span>
         <div>
-          <a href="#privacy">Privacy Policy</a>
-          <a href="#terms">Terms of Service</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
           <a href="#contact">Contact</a>
         </div>
       </footer>
@@ -317,6 +358,8 @@ function App() {
       <Routes>
         <Route path="/register" element={<Login />} />
         <Route path="/login" element={<SignIn />} />
+        <Route path="/privacy" element={<Legal />} />
+        <Route path="/terms" element={<Legal />} />
         <Route path="/supplier-dashboard" element={<ProtectedRoute><SupplierDashboard /></ProtectedRoute>} />
         <Route path="/business-dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
         <Route path="/business-profile" element={<ProtectedRoute><BusinessProfile /></ProtectedRoute>} />

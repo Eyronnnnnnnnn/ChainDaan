@@ -1,3 +1,13 @@
+.auth-shell { min-height: 100vh; display: flex; flex-direction: column; background: #f4f6fd; }
+.auth-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 66px; padding: 0 max(20px, calc((100vw - 1280px) / 2)); border-bottom: 1px solid #dfe6f3; background: #fff; }
+.auth-brand { display: inline-flex; align-items: center; gap: 9px; color: #10245e; font-size: 15px; font-weight: 800; }
+.auth-brand img { width: 34px; height: 34px; object-fit: contain; }
+.auth-header nav { display: flex; align-items: center; gap: 20px; color: #647493; font-size: 12px; }
+.auth-header nav a:hover { color: #2155d9; }
+.auth-header-action { padding: 8px 13px; border: 1px solid #2155d9; border-radius: 7px; color: #2155d9; }
+.auth-footer { display: flex; justify-content: space-between; gap: 24px; width: 100%; min-height: 82px; padding: 28px max(32px, calc((100vw - 1380px) / 2)); color: #74809a; background: #fff; font-size: 12px; }
+.auth-footer a { color: #2155d9; }
+.auth-legal-links { display: inline-flex; gap: 14px; }
 .register-page {
   min-height: 100vh;
   display: grid;
@@ -67,7 +77,7 @@
 .continue-divider { display: flex; align-items: center; gap: 13px; margin: 24px 0; color: #9ba4b4; font-size: 12px; }
 .continue-divider::before, .continue-divider::after { content: ""; height: 1px; flex: 1; background: #e1e5eb; }
 .social-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
-.social-buttons button { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 45px; border: 1px solid #e1e5eb; border-radius: 12px; color: #10245e; background: white; font-weight: 400; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.social-buttons button { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 45px; border: 1px solid #e1e5eb; border-radius: 12px; color: #10245e; background: white; font-weight: 400 !important; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
 .social-buttons button:hover { border-color: #9bb2eb; background: #f7f9ff; }
 .social-logo { display: inline-grid; place-items: center; width: 19px; height: 19px; font-family: Arial, sans-serif; font-size: 17px; font-weight: 700; line-height: 1; }
 .google-logo { color: #4285f4; }
@@ -77,21 +87,83 @@
 .register-panel button,
 .register-panel input,
 .register-panel select { border-radius: 4px; }
-.register-panel h2,
-.register-panel strong,
-.register-panel b,
-.register-panel .register-field span:first-child,
-.register-panel .terms-check,
-.register-panel .create-account,
-.register-panel .sign-in-button { font-weight: 400; }
 @media (max-width: 840px) { .register-page { display: block; } .register-intro { min-height: 390px; padding: 20px 28px; } .intro-copy { margin-top: 45px; } .intro-copy h1 { font-size: 36px; } .register-mascot { display: none; } .register-panel { margin: -18px auto 0; position: relative; } }
 @media (max-width: 540px) { .register-panel { width: 100%; margin: 0; padding: 28px 20px; border-radius: 0; } .field-grid { grid-template-columns: 1fr; } .register-intro { min-height: 350px; } }
+
+@media (max-width: 640px) {
+  .auth-header { align-items: flex-start; flex-direction: column; gap: 10px; padding: 12px 16px; }
+  .auth-header nav { width: 100%; justify-content: space-between; gap: 8px; font-size: 11px; }
+  .auth-header-action { padding: 7px 9px; }
+  .auth-footer { align-items: flex-start; flex-direction: column; gap: 9px; padding: 24px 16px; }
+  .auth-legal-links { flex-wrap: wrap; }
+  .register-page { min-height: auto; }
+  .register-intro { min-height: 330px; }
+  .register-panel { width: min(100% - 24px, 505px); }
+}
 
 .register-panel .register-subtitle { font-size: 12px; }
 .register-panel .register-field span:first-child { font-size: 10px; }
 .register-panel .register-input-wrap input { font-size: 12px; }
 .register-panel .terms-check { font-size: 11px; }
 .register-panel .create-account,
-.register-panel .sign-in-button { min-height: 45px; font-size: 12px; font-weight: 400; }
-.role-switch button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 400; }
+.register-panel .sign-in-button { min-height: 45px; font-size: 12px; }
+.role-switch button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; }
 .field-icon { display: inline-flex; align-items: center; }
+.register-input-wrap input { font-weight: 400; }
+
+@media (max-width: 420px) {
+  .register-page {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  .register-intro {
+    min-height: 315px;
+    padding: 18px 20px;
+  }
+  .intro-copy {
+    margin-top: 34px;
+  }
+  .intro-copy h1 {
+    font-size: 30px;
+  }
+  .intro-copy p {
+    font-size: 12px;
+  }
+  .intro-copy ul {
+    gap: 7px;
+    font-size: 12px;
+  }
+  .login-stats {
+    gap: 8px;
+    margin-top: 22px;
+  }
+  .login-stats div {
+    padding: 10px;
+  }
+  .login-stats b {
+    font-size: 21px;
+  }
+  .login-stats span {
+    font-size: 10px;
+  }
+  .register-panel {
+    width: 100%;
+    padding: 24px 16px;
+  }
+  .register-panel h2 {
+    font-size: 25px;
+  }
+  .login-options {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .social-buttons {
+    grid-template-columns: 1fr;
+  }
+  .social-buttons button,
+  .role-switch button,
+  .login-role-switch button {
+    min-height: 44px;
+  }
+}

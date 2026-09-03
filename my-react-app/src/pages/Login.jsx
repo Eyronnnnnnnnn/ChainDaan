@@ -39,6 +39,33 @@ function SocialButtons({ onProvider }) {
   );
 }
 
+function AuthHeader() {
+  return (
+    <header className="auth-header">
+      <a className="auth-brand" href="/" aria-label="Chain Daan home">
+        <img src="/images/logo.png" alt="Chain Daan" />
+        <span>Chain Daan</span>
+      </a>
+      <nav aria-label="Authentication navigation">
+        <a href="/">Home</a>
+        <a href="/login">Sign in</a>
+        <a className="auth-header-action" href="/register">Create account</a>
+      </nav>
+    </header>
+  );
+}
+
+function AuthFooter() {
+  return (
+    <footer className="auth-footer">
+      <span>© 2026 Chain Daan</span>
+      <span>Connect with trusted local businesses</span>
+      <span className="auth-legal-links"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></span>
+      <a href="mailto:aaronguillermo.dev@gmail.com">Contact developer</a>
+    </footer>
+  );
+}
+
 function Field({ label, placeholder, type = "text", icon, name, value, onChange }) {
   return (
     <label className="register-field">
@@ -79,7 +106,9 @@ export default function Login() {
   }
 
   return (
-    <main className="register-page">
+    <div className="auth-shell">
+      <AuthHeader />
+      <main className="register-page">
       <section className="register-intro">
         <a className="register-mark" href="/" aria-label="Chain Daan home">
           <img src="/images/logo.png" alt="Chain Daan" />
@@ -130,7 +159,7 @@ export default function Login() {
           </div>
           <label className="terms-check">
             <input type="checkbox" required />
-            <span>I agree to Chain Daan&apos;s <a href="#terms">Terms of Service</a> and <a href="#privacy">Privacy Policy</a></span>
+            <span>I agree to Chain Daan&apos;s <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></span>
           </label>
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="create-account" type="submit" disabled={saving}>
@@ -142,7 +171,9 @@ export default function Login() {
         {socialMessage && <p className="social-message" role="status">{socialMessage}</p>}
         <p className="sign-in">Already have an account? <a href="/login">Sign in</a></p>
       </section>
-    </main>
+      </main>
+      <AuthFooter />
+    </div>
   );
 }
 
@@ -171,7 +202,9 @@ export function SignIn() {
     setSocialMessage(`${provider} sign-in needs OAuth credentials to be configured first.`);
   }
   return (
-    <main className="register-page login-page">
+    <div className="auth-shell">
+      <AuthHeader />
+      <main className="register-page login-page">
       <section className="register-intro login-intro">
         <a className="register-mark" href="/" aria-label="Chain Daan home">
           <img src="/images/logo.png" alt="Chain Daan" />
@@ -218,6 +251,8 @@ export function SignIn() {
         {socialMessage && <p className="social-message" role="status">{socialMessage}</p>}
         <p className="sign-in register-prompt">Don&apos;t have an account? <a href="/register">Create one free</a></p>
       </section>
-    </main>
+      </main>
+      <AuthFooter />
+    </div>
   );
 }

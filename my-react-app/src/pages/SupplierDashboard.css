@@ -2643,13 +2643,16 @@
   flex-wrap: wrap;
 }
 .orders-filter-pills button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 13px;
   border: 1px solid #e1e6ef;
   border-radius: 20px;
   background: #fff;
   color: #64748b;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.15s ease;
 }

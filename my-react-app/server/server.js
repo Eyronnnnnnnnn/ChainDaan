@@ -9,17 +9,17 @@ import mongoose from "mongoose";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { Server as SocketServer } from "socket.io";
+import { env } from "./config/env.js";
 
 const app = express();
 const httpServer = createServer(app);
 const io = new SocketServer(httpServer, {
-  cors: { origin: process.env.CLIENT_ORIGIN || "http://localhost:5173" },
+  cors: { origin: env.clientOrigin },
 });
-const port = process.env.PORT || 4000;
-const mongoUri = process.env.MONGODB_URI;
+const port = env.port;
+const mongoUri = env.mongoUri;
 const scrypt = promisify(crypto.scrypt);
-const authSecret =
-  process.env.AUTH_SECRET || "development-only-change-this-secret";
+const authSecret = env.authSecret;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -38,7 +38,7 @@ const upload = multer({
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173" }));
+app.use(cors({ origin: env.clientOrigin }));
 app.use(express.json());
 
 app.get("/", (_request, response) =>
@@ -165,11 +165,22 @@ const saleSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+const feedbackSchema = new mongoose.Schema(
+  {
+    developerEmail: { type: String, required: true, lowercase: true },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    message: { type: String, required: true, trim: true },
+  },
+  { timestamps: true },
+);
+
 const Profile = mongoose.model("Profile", profileSchema);
 const Product = mongoose.model("Product", productSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
 const Message = mongoose.model("Message", messageSchema);
 const Sale = mongoose.model("Sale", saleSchema);
+const Feedback = mongoose.model("Feedback", feedbackSchema);
 const onlineUsers = new Map();
 
 const asyncRoute = (handler) => (request, response, next) =>
@@ -266,6 +277,22 @@ app.get("/api/health", (_request, response) =>
     ok: true,
     database:
       mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  }),
+);
+app.post(
+  "/api/feedback",
+  asyncRoute(async (request, response) => {
+    const { name, email, message } = request.body;
+    if (!name?.trim() || !email?.trim() || !message?.trim()) {
+      return response.status(400).json({ error: "Name, email, and feedback are required." });
+    }
+    const feedback = await Feedback.create({
+      developerEmail: "aaronguillermo.dev@gmail.com",
+      name: name.trim(),
+      email: email.trim(),
+      message: message.trim(),
+    });
+    response.status(201).json({ id: feedback._id, message: "Feedback received." });
   }),
 );
 app.post(
