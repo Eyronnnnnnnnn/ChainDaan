@@ -67,15 +67,31 @@
 .continue-divider { display: flex; align-items: center; gap: 13px; margin: 24px 0; color: #9ba4b4; font-size: 12px; }
 .continue-divider::before, .continue-divider::after { content: ""; height: 1px; flex: 1; background: #e1e5eb; }
 .social-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
-.social-buttons button { min-height: 45px; border: 1px solid #e1e5eb; border-radius: 12px; color: #10245e; background: white; font-weight: 800; cursor: pointer; }
-.google-dot { color: #ef463c; font-size: 20px; vertical-align: -1px; }
-.facebook-dot { color: #2578e8; font-size: 20px; vertical-align: -1px; }
+.social-buttons button { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 45px; border: 1px solid #e1e5eb; border-radius: 12px; color: #10245e; background: white; font-weight: 400; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.social-buttons button:hover { border-color: #9bb2eb; background: #f7f9ff; }
+.social-logo { display: inline-grid; place-items: center; width: 19px; height: 19px; font-family: Arial, sans-serif; font-size: 17px; font-weight: 700; line-height: 1; }
+.google-logo { color: #4285f4; }
+.facebook-logo { color: #1877f2; font-size: 22px; }
+.social-message { margin: 12px 0 0; color: #c27800; font-size: 11px; text-align: center; }
 .register-prompt { margin-top: 28px; }
 .register-panel button,
 .register-panel input,
 .register-panel select { border-radius: 4px; }
 .register-panel h2,
 .register-panel strong,
-.register-panel b { font-weight: 500; }
+.register-panel b,
+.register-panel .register-field span:first-child,
+.register-panel .terms-check,
+.register-panel .create-account,
+.register-panel .sign-in-button { font-weight: 400; }
 @media (max-width: 840px) { .register-page { display: block; } .register-intro { min-height: 390px; padding: 20px 28px; } .intro-copy { margin-top: 45px; } .intro-copy h1 { font-size: 36px; } .register-mascot { display: none; } .register-panel { margin: -18px auto 0; position: relative; } }
 @media (max-width: 540px) { .register-panel { width: 100%; margin: 0; padding: 28px 20px; border-radius: 0; } .field-grid { grid-template-columns: 1fr; } .register-intro { min-height: 350px; } }
+
+.register-panel .register-subtitle { font-size: 12px; }
+.register-panel .register-field span:first-child { font-size: 10px; }
+.register-panel .register-input-wrap input { font-size: 12px; }
+.register-panel .terms-check { font-size: 11px; }
+.register-panel .create-account,
+.register-panel .sign-in-button { min-height: 45px; font-size: 12px; font-weight: 400; }
+.role-switch button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 400; }
+.field-icon { display: inline-flex; align-items: center; }

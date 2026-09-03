@@ -47,6 +47,14 @@ export function MessageSquareIcon({ size = 18, className = "" }) {
   );
 }
 
+export function MenuIcon({ size = 18, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
 export function TrendingUpIcon({ size = 18, className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -308,10 +316,7 @@ export function VerifiedBadgeIcon({ size = 16, className = "" }) {
       title="Verified"
       aria-label="Verified Account"
     >
-      <path
-        fill="#0095f6"
-        d="M10.52 2.39a2 2 0 0 1 2.96 0l.96.99a2 2 0 0 0 1.63.63l1.37-.15a2 2 0 0 1 2.15 2.15l-.15 1.37a2 2 0 0 0 .63 1.63l.99.96a2 2 0 0 1 0 2.96l-.99.96a2 2 0 0 0-.63 1.63l.15 1.37a2 2 0 0 1-2.15 2.15l-1.37-.15a2 2 0 0 0-1.63.63l-.96.99a2 2 0 0 1-2.96 0l-.96-.99a2 2 0 0 0-1.63-.63l-1.37.15a2 2 0 0 1-2.15-2.15l.15-1.37a2 2 0 0 0-.63-1.63l-.99-.96a2 2 0 0 1 0-2.96l.99-.96a2 2 0 0 0 .63-1.63l-.15-1.37a2 2 0 0 1 2.15-2.15l1.37.15a2 2 0 0 0 1.63-.63l.96-.99Z"
-      />
+      <circle cx="12" cy="12" r="10" fill="#0095f6" />
       <path
         stroke="#ffffff"
         strokeWidth="2.2"

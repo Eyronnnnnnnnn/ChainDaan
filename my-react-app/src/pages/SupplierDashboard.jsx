@@ -4,7 +4,7 @@ import { Line } from "react-chartjs-2";
 import { io } from "socket.io-client";
 import "./SupplierDashboard.css";
 import { getCurrentUser, logout } from "../lib/session.js";
-import { mergeMessages } from "../lib/chat.js";
+import { idValue, mergeMessages } from "../lib/chat.js";
 import { chatApi, orderApi, productApi, profileApi } from "../api/client.js";
 import ProfilePictureUpload from "../components/ProfilePictureUpload.jsx";
 import Avatar from "../components/Avatar.jsx";
@@ -13,6 +13,7 @@ import {
   GridIcon,
   ShoppingBagIcon,
   MessageSquareIcon,
+  MenuIcon,
   TrendingUpIcon,
   UserIcon,
   SearchIcon,
@@ -77,6 +78,8 @@ export default function SupplierDashboard() {
   });
   const [productSearch, setProductSearch] = useState("");
   const [darkMode, setDarkMode] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const pendingOrdersCount = orders.filter((o) => o.status === "pending").length;
 
@@ -143,8 +146,9 @@ export default function SupplierDashboard() {
             color: "blue",
           };
         });
-        setChats(formatted);
-        setSelectedChat(formatted[0] || null);
+        const uniqueChats = [...new Map(formatted.map((chat) => [idValue(chat.recipientId), chat])).values()];
+        setChats(uniqueChats);
+        setSelectedChat(uniqueChats[0] || null);
       })
       .catch(() => setChats([]));
   }, [user._id]);
@@ -201,7 +205,7 @@ export default function SupplierDashboard() {
 
   function handleMessageBuyer(buyerObj) {
     if (!buyerObj?._id) return;
-    const existing = chats.find((c) => c.recipientId === buyerObj._id);
+    const existing = chats.find((c) => idValue(c.recipientId) === idValue(buyerObj._id));
     if (existing) {
       setSelectedChat(existing);
       setActiveView("Messages");
@@ -226,8 +230,12 @@ export default function SupplierDashboard() {
   }
 
   return (
-    <main className={`dashboard-shell ${darkMode ? "dark-mode" : ""}`}>
+    <main className={`dashboard-shell ${darkMode ? "dark-mode" : ""} ${sidebarOpen ? "sidebar-open" : ""}`}>
+      <button className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" type="button" />
       <aside className="dashboard-sidebar">
+        <button className="mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" type="button">
+          <XIcon size={18} />
+        </button>
         <a href="/" className="dashboard-brand">
           <span className="brand-mark">CD</span>
           <span>Chain Daan</span>
@@ -251,7 +259,7 @@ export default function SupplierDashboard() {
               <button
                 key={view}
                 className={activeView === view ? "active" : ""}
-                onClick={() => setActiveView(view)}
+                onClick={() => { setActiveView(view); setSidebarOpen(false); }}
                 type="button"
               >
                 <span className="dashboard-icon">
@@ -264,7 +272,6 @@ export default function SupplierDashboard() {
                 </span>
                 {view}
                 {view === "Incoming Orders" && pendingOrdersCount > 0 && <em>{pendingOrdersCount}</em>}
-                {view === "Messages" && <em>3</em>}
               </button>
             )
           )}
@@ -278,6 +285,9 @@ export default function SupplierDashboard() {
 
       <section className="dashboard-main">
         <header className="dashboard-topbar">
+          <button className="mobile-menu-button" onClick={() => setSidebarOpen(true)} aria-label="Open navigation" type="button">
+            <MenuIcon size={19} />
+          </button>
           <div>
             <p className="dashboard-kicker">SUPPLIER WORKSPACE</p>
             <h1>{activeView}</h1>
@@ -292,10 +302,20 @@ export default function SupplierDashboard() {
             >
               {darkMode ? <SunIcon size={16} /> : <MoonIcon size={16} />}
             </button>
-            <button className="icon-button" type="button" aria-label="Notifications">
+            <button className="icon-button" type="button" aria-label="Notifications" onClick={() => setNotificationsOpen((current) => !current)}>
               <BellIcon size={18} />
               {pendingOrdersCount > 0 && <b>{pendingOrdersCount}</b>}
             </button>
+            {notificationsOpen && (
+              <div className="notification-panel" role="status">
+                <strong>Notifications</strong>
+                {pendingOrdersCount > 0 ? (
+                  <button type="button" onClick={() => { setActiveView("Incoming Orders"); setNotificationsOpen(false); }}>
+                    <ShoppingBagIcon size={15} /> {pendingOrdersCount} order{pendingOrdersCount === 1 ? "" : "s"} waiting for approval
+                  </button>
+                ) : <span>You&apos;re all caught up.</span>}
+              </div>
+            )}
             <div
               className="topbar-user"
               onClick={() => setActiveView("My Profile")}
@@ -648,6 +668,20 @@ function SupplierOrders({ orders, setOrders, onMessageBuyer }) {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className={`order-progress ${order.status === "cancelled" ? "cancelled" : ""}`}>
+                  {["pending", "confirmed", "completed"].map((stage, index) => {
+                    const stageIndex = ["pending", "confirmed", "completed"].indexOf(order.status);
+                    const isActive = order.status !== "cancelled" && index <= stageIndex;
+                    return (
+                      <div className={`progress-step ${isActive ? "active" : ""}`} key={stage}>
+                        <span className="progress-dot">{isActive ? <CheckIcon size={11} /> : index + 1}</span>
+                        <span>{stage === "pending" ? "Pending approval" : stage === "confirmed" ? "Preparing" : "Delivered"}</span>
+                      </div>
+                    );
+                  })}
+                  {order.status === "cancelled" && <span className="progress-cancelled"><XIcon size={12} /> Order declined</span>}
                 </div>
 
                 <div className="order-card-foot">
@@ -1023,26 +1057,54 @@ function Messages({
 
 function SupplierSales({ products, orders = [] }) {
   const [period, setPeriod] = useState("Monthly");
+  const saleOrders = orders.filter((order) => ["confirmed", "completed"].includes(order.status));
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const formatPeso = (amount) => `₱${amount.toLocaleString("en-PH", { maximumFractionDigits: 0 })}`;
+  const totalFor = (matchingOrders) => matchingOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const monthlyValues = Array.from({ length: 12 }, (_, month) =>
+    totalFor(saleOrders.filter((order) => {
+      const date = new Date(order.soldAt || order.createdAt);
+      return date.getFullYear() === currentYear && date.getMonth() === month;
+    }))
+  );
+  const quarterlyValues = Array.from({ length: 4 }, (_, quarter) =>
+    totalFor(saleOrders.filter((order) => {
+      const date = new Date(order.soldAt || order.createdAt);
+      return date.getFullYear() === currentYear && Math.floor(date.getMonth() / 3) === quarter;
+    }))
+  );
+  const yearlyYears = Array.from({ length: 5 }, (_, index) => currentYear - 4 + index);
+  const yearlyValues = yearlyYears.map((year) =>
+    totalFor(saleOrders.filter((order) => new Date(order.soldAt || order.createdAt).getFullYear() === year))
+  );
   const chartData = {
     Monthly: {
-      labels: ["January", "February", "March", "April", "May", "June", "July"],
-      values: [65, 59, 80, 81, 56, 55, 40],
-      total: "₱86,450",
-      title: "Monthly sales",
+      labels: Array.from({ length: 12 }, (_, month) => new Date(currentYear, month).toLocaleString("en-PH", { month: "short" })),
+      values: monthlyValues,
+      total: formatPeso(totalFor(saleOrders.filter((order) => new Date(order.soldAt || order.createdAt).getFullYear() === currentYear && new Date(order.soldAt || order.createdAt).getMonth() === now.getMonth()))),
+      title: `${currentYear} monthly sales`,
     },
     Quarterly: {
       labels: ["Q1", "Q2", "Q3", "Q4"],
-      values: [58, 76, 88, 100],
-      total: "₱924,800",
-      title: "Quarterly sales",
+      values: quarterlyValues,
+      total: formatPeso(totalFor(saleOrders.filter((order) => new Date(order.soldAt || order.createdAt).getFullYear() === currentYear))),
+      title: `${currentYear} quarterly sales`,
     },
     Yearly: {
-      labels: ["2022", "2023", "2024", "2025", "2026"],
-      values: [42, 59, 71, 88, 100],
-      total: "₱3,842,600",
+      labels: yearlyYears.map(String),
+      values: yearlyValues,
+      total: formatPeso(totalFor(saleOrders)),
       title: "Yearly sales",
     },
   }[period];
+  const currentMonthOrders = saleOrders.filter((order) => {
+    const date = new Date(order.soldAt || order.createdAt);
+    return date.getFullYear() === currentYear && date.getMonth() === now.getMonth();
+  });
+  const currentYearOrders = saleOrders.filter(
+    (order) => new Date(order.soldAt || order.createdAt).getFullYear() === currentYear
+  );
   const data = {
     labels: chartData.labels,
     datasets: [
@@ -1071,7 +1133,7 @@ function SupplierSales({ products, orders = [] }) {
       tooltip: {
         displayColors: false,
         callbacks: {
-          label: (context) => ` ${context.raw} sales index`,
+          label: (context) => ` ${formatPeso(Number(context.raw || 0))}`,
         },
       },
     },
@@ -1081,9 +1143,8 @@ function SupplierSales({ products, orders = [] }) {
         ticks: { color: "#69758a", font: { size: 12 } },
       },
       y: {
-        min: 35,
-        max: 85,
-        ticks: { stepSize: 10, color: "#69758a", font: { size: 12 } },
+        beginAtZero: true,
+        ticks: { color: "#69758a", font: { size: 12 }, callback: (value) => formatPeso(Number(value)) },
         grid: { color: "#dfe4eb" },
       },
     },
@@ -1112,20 +1173,20 @@ function SupplierSales({ products, orders = [] }) {
       <div className="metric-grid">
         <Metric
           label="Monthly sales"
-          value="₱86,450"
-          change="+14.8% this month"
+          value={formatPeso(totalFor(currentMonthOrders))}
+          change={`${currentMonthOrders.length} confirmed orders this month`}
           icon={<TrendingUpIcon size={20} />}
         />
         <Metric
           label="Yearly sales"
-          value="₱924,800"
-          change="+21.4% year to date"
+          value={formatPeso(totalFor(currentYearOrders))}
+          change={`${currentYearOrders.length} confirmed orders this year`}
           icon={<GridIcon size={20} />}
         />
         <Metric
           label="Orders this month"
-          value={orders.length > 0 ? `${orders.length}` : "64"}
-          change="+8 this month"
+          value={currentMonthOrders.length}
+          change="Confirmed orders this month"
           icon={<ShoppingBagIcon size={20} />}
         />
         <Metric

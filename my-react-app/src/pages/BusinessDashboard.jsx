@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 import "./SupplierDashboard.css";
 import { chatApi, orderApi, profileApi, request } from "../api/client.js";
 import { getCurrentUser, logout } from "../lib/session.js";
-import { mergeMessages } from "../lib/chat.js";
+import { idValue, mergeConversations, mergeMessages } from "../lib/chat.js";
 import Avatar from "../components/Avatar.jsx";
 import ProductImageCarousel from "../components/ProductImageCarousel.jsx";
 import OrderModal from "../components/OrderModal.jsx";
@@ -12,6 +12,8 @@ import {
   GridIcon,
   ShoppingBagIcon,
   MessageSquareIcon,
+  BellIcon,
+  MenuIcon,
   UserIcon,
   SearchIcon,
   SunIcon,
@@ -57,6 +59,8 @@ export default function BusinessDashboard() {
   const [ordersCount, setOrdersCount] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const towns = ["All towns", ...new Set(suppliers.map((supplier) => supplier.town).filter(Boolean))];
   const products = suppliers.flatMap((supplier) =>
@@ -110,8 +114,12 @@ export default function BusinessDashboard() {
   }
 
   return (
-    <main className={`dashboard-shell ${darkMode ? "dark-mode" : ""}`}>
+    <main className={`dashboard-shell ${darkMode ? "dark-mode" : ""} ${sidebarOpen ? "sidebar-open" : ""}`}>
+      <button className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" type="button" />
       <aside className="dashboard-sidebar">
+        <button className="mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" type="button">
+          <XIcon size={18} />
+        </button>
         <a href="/" className="dashboard-brand">
           <span className="brand-mark">CD</span>
           <span>Chain Daan</span>
@@ -134,7 +142,7 @@ export default function BusinessDashboard() {
             <button
               key={view}
               className={activeView === view ? "active" : ""}
-              onClick={() => setActiveView(view)}
+              onClick={() => { setActiveView(view); setSidebarOpen(false); }}
               type="button"
             >
               <span className="dashboard-icon">
@@ -157,11 +165,24 @@ export default function BusinessDashboard() {
       </aside>
       <section className="dashboard-main">
         <header className="dashboard-topbar">
+          <button className="mobile-menu-button" onClick={() => setSidebarOpen(true)} aria-label="Open navigation" type="button">
+            <MenuIcon size={19} />
+          </button>
           <div>
             <p className="dashboard-kicker">BUSINESS WORKSPACE</p>
             <h1>{activeView}</h1>
           </div>
           <div className="topbar-actions">
+            <button className="icon-button" type="button" aria-label="Notifications" onClick={() => setNotificationsOpen((current) => !current)}>
+              <BellIcon size={18} />
+              {ordersCount > 0 && <b>{ordersCount}</b>}
+            </button>
+            {notificationsOpen && (
+              <div className="notification-panel" role="status">
+                <strong>Notifications</strong>
+                {ordersCount > 0 ? <button type="button" onClick={() => { setActiveView("My Orders"); setNotificationsOpen(false); }}><ShoppingBagIcon size={15} /> View your {ordersCount} order{ordersCount === 1 ? "" : "s"}</button> : <span>No new notifications.</span>}
+              </div>
+            )}
             <button
               className="theme-toggle"
               onClick={() => setDarkMode((current) => !current)}
@@ -797,9 +818,9 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
   useEffect(() => {
     chatApi
       .conversations()
-      .then(setConversations)
+      .then((data) => setConversations((current) => mergeConversations(current, data, currentUser._id)))
       .catch((requestError) => setError(requestError.message));
-  }, []);
+  }, [currentUser._id]);
 
   useEffect(() => {
     if (!supplier?._id) return undefined;
@@ -809,16 +830,14 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
       .then((result) => {
         if (!cancelled) {
           setConversation(result);
-          setConversations((current) =>
-            current.some((item) => item._id === result._id) ? current : [...current, result]
-          );
+          setConversations((current) => mergeConversations(current, result, currentUser._id));
         }
       })
       .catch((requestError) => setError(requestError.message));
     return () => {
       cancelled = true;
     };
-  }, [supplier?._id]);
+  }, [supplier?._id, currentUser._id]);
 
   useEffect(() => {
     if (!conversation?._id) return undefined;
@@ -911,7 +930,7 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
 
   const otherConversations = conversations.filter((item) =>
     item.participantIds.some(
-      (participant) => participant._id !== currentUser._id && participant.role === "supplier"
+      (participant) => idValue(participant) !== idValue(currentUser._id) && participant.role === "supplier"
     )
   );
 
@@ -925,8 +944,8 @@ function BusinessMessages({ supplier, setSelectedSupplier, currentUser = getCurr
           </div>
         </div>
         {otherConversations.map((item) => {
-          const itemSupplier = item.participantIds.find(
-            (participant) => participant._id !== currentUser._id
+              const itemSupplier = item.participantIds.find(
+                (participant) => idValue(participant) !== idValue(currentUser._id)
           );
           return (
             <button
