@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "start": "npm --prefix backend run start",
     "dev": "npm --prefix frontend run dev",
     "server": "npm --prefix backend run server",
     "seed": "npm --prefix backend run seed",
