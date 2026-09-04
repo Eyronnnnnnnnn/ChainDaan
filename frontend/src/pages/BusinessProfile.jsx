@@ -42,7 +42,9 @@ export default function BusinessProfile() {
     <main className={`dashboard-shell ${darkMode ? "dark-mode" : ""}`}>
       <aside className="dashboard-sidebar">
         <a href="/" className="dashboard-brand">
-          <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
+          <span className="brand-logo-frame">
+            <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
+          </span>
         </a>
         <div className="supplier-mini">
           <Avatar user={profile} />

@@ -121,7 +121,9 @@ export default function BusinessDashboard() {
           <XIcon size={18} />
         </button>
         <a href="/" className="dashboard-brand">
-          <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
+          <span className="brand-logo-frame">
+            <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
+          </span>
         </a>
         <div
           className="supplier-mini"
