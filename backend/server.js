@@ -643,6 +643,47 @@ app.get(
     response.json(publicProfile(await Profile.findById(request.auth.sub))),
   ),
 );
+app.delete(
+  "/api/auth/account",
+  requireAuth,
+  asyncRoute(async (request, response) => {
+    if (request.body?.confirmation !== "Delete My Account")
+      return response.status(400).json({
+        error: 'Enter "Delete My Account" to permanently delete your account.',
+      });
+
+    const profileId = new mongoose.Types.ObjectId(request.auth.sub);
+    const products = await Product.find({ supplierId: profileId }).select("_id");
+    const productIds = products.map((product) => product._id);
+    const conversations = await Conversation.find({ participantIds: profileId }).select("_id");
+    const conversationIds = conversations.map((conversation) => conversation._id);
+
+    await Message.deleteMany({
+      $or: [
+        { senderId: profileId },
+        { recipientId: profileId },
+        ...(conversationIds.length ? [{ conversationId: { $in: conversationIds } }] : []),
+      ],
+    });
+    if (conversationIds.length)
+      await Conversation.deleteMany({ _id: { $in: conversationIds } });
+    await Sale.deleteMany({
+      $or: [
+        { supplierId: profileId },
+        { buyerId: profileId },
+        ...(productIds.length ? [{ productId: { $in: productIds } }] : []),
+      ],
+    });
+    await Product.deleteMany({ supplierId: profileId });
+    const deletedProfile = await Profile.findByIdAndDelete(profileId);
+    if (!deletedProfile)
+      return response.status(404).json({ error: "Account not found." });
+
+    onlineUsers.delete(request.auth.sub);
+    io.emit("presence:update", { userId: request.auth.sub, online: false });
+    response.status(204).end();
+  }),
+);
 app.get(
   "/api/profiles",
   requireAuth,

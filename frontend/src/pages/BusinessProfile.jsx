@@ -2,6 +2,7 @@ import { useState } from "react";
 import { profileApi } from "../api/client.js";
 import { getCurrentUser, logout } from "../lib/session.js";
 import ProfilePictureUpload from "../components/ProfilePictureUpload.jsx";
+import DeleteAccountModal from "../components/DeleteAccountModal.jsx";
 import Avatar from "../components/Avatar.jsx";
 import {
   SunIcon,
@@ -21,6 +22,7 @@ export default function BusinessProfile() {
   const [profile, setProfile] = useState(currentUser);
   const [status, setStatus] = useState("");
   const [darkMode, setDarkMode] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const update = (field) => (event) => {
     setProfile({ ...profile, [field]: event.target.value });
@@ -41,11 +43,11 @@ export default function BusinessProfile() {
   return (
     <main className={`dashboard-shell ${darkMode ? "dark-mode" : ""}`}>
       <aside className="dashboard-sidebar">
-        <a href="/" className="dashboard-brand">
+        <div className="dashboard-brand" aria-label="Chain Daan">
           <span className="brand-logo-frame">
             <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
           </span>
-        </a>
+        </div>
         <div className="supplier-mini">
           <Avatar user={profile} />
           <div>
@@ -93,14 +95,19 @@ export default function BusinessProfile() {
               <h2>Edit your profile</h2>
               <p>Keep your business details and profile picture current for supplier conversations.</p>
             </div>
-            <button
-              className="primary-action"
-              onClick={save}
-              type="button"
-              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-            >
-              {status === "saved" ? <><CheckIcon size={15} /> Saved</> : status || "Save changes"}
-            </button>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button
+                className="primary-action"
+                onClick={save}
+                type="button"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                {status === "saved" ? <><CheckIcon size={15} /> Saved</> : status || "Save changes"}
+              </button>
+              <button className="delete-account-button" onClick={() => setDeleteModalOpen(true)} type="button">
+                Delete account
+              </button>
+            </div>
           </div>
           <section className="dashboard-card profile-card">
             {/* Glassmorphism Profile Cover Banner with side contact meta */}
@@ -221,6 +228,7 @@ export default function BusinessProfile() {
               </label>
             </div>
           </section>
+          {deleteModalOpen && <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />}
         </div>
       </section>
     </main>

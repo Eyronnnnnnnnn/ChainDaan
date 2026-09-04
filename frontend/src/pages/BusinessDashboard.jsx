@@ -8,6 +8,7 @@ import Avatar from "../components/Avatar.jsx";
 import ProductImageCarousel from "../components/ProductImageCarousel.jsx";
 import OrderModal from "../components/OrderModal.jsx";
 import ProfilePictureUpload from "../components/ProfilePictureUpload.jsx";
+import DeleteAccountModal from "../components/DeleteAccountModal.jsx";
 import {
   GridIcon,
   ShoppingBagIcon,
@@ -120,11 +121,11 @@ export default function BusinessDashboard() {
         <button className="mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" type="button">
           <XIcon size={18} />
         </button>
-        <a href="/" className="dashboard-brand">
+        <div className="dashboard-brand" aria-label="Chain Daan">
           <span className="brand-logo-frame">
             <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
           </span>
-        </a>
+        </div>
         <div
           className="supplier-mini"
           onClick={() => setActiveView("My Profile")}
@@ -1063,6 +1064,7 @@ function BusinessProfile({ user, onUserUpdated, profileSaved, setProfileSaved })
   const [activeTab, setActiveTab] = useState("edit"); // "edit" | "preview"
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const update = (field) => (event) => {
     setProfile((current) => ({ ...current, [field]: event.target.value }));
@@ -1110,6 +1112,9 @@ function BusinessProfile({ user, onUserUpdated, profileSaved, setProfileSaved })
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             {saving ? "Saving..." : profileSaved ? <><CheckIcon size={15} /> Saved</> : "Save changes"}
+          </button>
+          <button className="delete-account-button" onClick={() => setDeleteModalOpen(true)} type="button">
+            Delete account
           </button>
         </div>
       </div>
@@ -1359,6 +1364,7 @@ function BusinessProfile({ user, onUserUpdated, profileSaved, setProfileSaved })
           </div>
         )}
       </section>
+      {deleteModalOpen && <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { getCurrentUser, logout } from "../lib/session.js";
 import { idValue, mergeMessages } from "../lib/chat.js";
 import { chatApi, orderApi, productApi, profileApi } from "../api/client.js";
 import ProfilePictureUpload from "../components/ProfilePictureUpload.jsx";
+import DeleteAccountModal from "../components/DeleteAccountModal.jsx";
 import Avatar from "../components/Avatar.jsx";
 import {
   HomeIcon,
@@ -236,11 +237,11 @@ export default function SupplierDashboard() {
         <button className="mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" type="button">
           <XIcon size={18} />
         </button>
-        <a href="/" className="dashboard-brand">
+        <div className="dashboard-brand" aria-label="Chain Daan">
           <span className="brand-logo-frame">
             <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
           </span>
-        </a>
+        </div>
         <div
           className="supplier-mini"
           onClick={() => setActiveView("My Profile")}
@@ -1215,6 +1216,7 @@ function SupplierSales({ products, orders = [] }) {
 function Profile({ user, onUserUpdated, profileSaved, setProfileSaved }) {
   const [profile, setProfile] = useState(user);
   const [activeTab, setActiveTab] = useState("edit"); // "edit" | "preview"
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const update = (field) => (event) =>
     setProfile((current) => ({ ...current, [field]: event.target.value }));
@@ -1250,6 +1252,9 @@ function Profile({ user, onUserUpdated, profileSaved, setProfileSaved }) {
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             {profileSaved ? <><CheckIcon size={15} /> Saved</> : "Save changes"}
+          </button>
+          <button className="delete-account-button" onClick={() => setDeleteModalOpen(true)} type="button">
+            Delete account
           </button>
         </div>
       </div>
@@ -1511,6 +1516,7 @@ function Profile({ user, onUserUpdated, profileSaved, setProfileSaved }) {
           </div>
         )}
       </section>
+      {deleteModalOpen && <DeleteAccountModal onClose={() => setDeleteModalOpen(false)} />}
     </div>
   );
 }

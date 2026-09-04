@@ -34,6 +34,11 @@ export const profileApi = {
     body.append("photo", file);
     return request(`/api/profiles/${id}/photo`, { method: "POST", body });
   },
+  removeAccount: (confirmation) =>
+    request("/api/auth/account", {
+      method: "DELETE",
+      body: JSON.stringify({ confirmation }),
+    }),
 };
 
 export const productApi = {
