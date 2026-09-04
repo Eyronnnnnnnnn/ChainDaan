@@ -273,12 +273,12 @@ function Home() {
         </section>
         <section className="how-section scroll-reveal" id="about">
           <div className="how-copy">
-            <p className="eyebrow">HOW IT WORKS</p>
-            <h2>
+            <p className="eyebrow reveal-text">HOW IT WORKS</p>
+            <h2 className="reveal-text">
               Simple, Fast &<br />
               <strong>Reliable Delivery</strong>
             </h2>
-            <p>
+            <p className="reveal-text">
               From ordering to doorstep delivery, Chain Daan ensures every
               transaction between businesses and suppliers in Ilocos Norte is
               smooth, secure, and traceable.
@@ -322,7 +322,7 @@ function Home() {
           <div className="products-grid">{products.map(([name, category, supplier, price, image]) => <article className="product-card" key={name}><ImageSlot src={`/images/${image}`} alt={name} className="product-image" /><div className="product-info"><small>{category}</small><h3>{name}</h3><p>{supplier}</p><div className="product-bottom"><strong>{price}</strong><button className="button button-gold" type="button">Add</button></div></div></article>)}</div>
         </section>
         <section className="contact-section scroll-reveal" id="contact">
-          <div className="contact-copy">
+          <div className="contact-copy reveal-text">
             <p className="eyebrow">GET IN TOUCH</p>
             <h2>Contact the developer</h2>
             <p>Have a question, found an issue, or have an idea for Chain Daan? Send your feedback directly to the development team.</p>
@@ -339,16 +339,16 @@ function Home() {
           </form>
         </section>
         <section className="cta-section scroll-reveal" id="register">
-          <h2>
+          <h2 className="reveal-text">
             Ready to grow your business
             <br />
             <strong>in Ilocos Norte?</strong>
           </h2>
-          <p>
+          <p className="reveal-text">
             Join 500+ local businesses already sourcing smarter through Chain
             Daan.
           </p>
-          <div>
+          <div className="reveal-text">
             <a className="button button-gold" href="/register">
               Register as a Business
             </a>
@@ -358,7 +358,7 @@ function Home() {
           </div>
         </section>
       </main>
-      <footer className="scroll-reveal">
+      <footer>
         <span>
           © 2026 Chain Daan. All rights reserved. Connecting Businesses in
           Ilocos Norte.

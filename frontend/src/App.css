@@ -9,54 +9,52 @@ html { scroll-behavior: smooth; }
 .site-shell section,
 .site-shell footer { scroll-margin-top: 80px; }
 .site-header {
-  animation: header-enter 0.55s ease-out both;
+  animation: header-enter 0.35s ease-out both;
 }
 .hero-entrance .hero-copy > *,
 .hero-entrance .hero-visual {
-  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.hero-entrance .hero-copy > :nth-child(1) { animation-delay: 0.08s; }
-.hero-entrance .hero-copy > :nth-child(2) { animation-delay: 0.15s; }
-.hero-entrance .hero-copy > :nth-child(3) { animation-delay: 0.22s; }
-.hero-entrance .hero-copy > :nth-child(4) { animation-delay: 0.29s; }
-.hero-entrance .hero-copy > :nth-child(5) { animation-delay: 0.36s; }
-.hero-entrance .hero-visual { animation-delay: 0.2s; }
+.hero-entrance .hero-copy > :nth-child(1) { animation-delay: 0.04s; }
+.hero-entrance .hero-copy > :nth-child(2) { animation-delay: 0.09s; }
+.hero-entrance .hero-copy > :nth-child(3) { animation-delay: 0.14s; }
+.hero-entrance .hero-copy > :nth-child(4) { animation-delay: 0.19s; }
+.hero-entrance .hero-copy > :nth-child(5) { animation-delay: 0.24s; }
+.hero-entrance .hero-visual { animation-delay: 0.12s; }
 .scroll-reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.65s ease-out, transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
 }
-.scroll-reveal.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.scroll-reveal .reveal-text,
 .scroll-reveal .feature-card,
 .scroll-reveal .stat,
 .scroll-reveal .product-card,
 .scroll-reveal .steps > * {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 0.48s ease-out, transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
+.scroll-reveal.is-visible .reveal-text,
 .scroll-reveal.is-visible .feature-card,
 .scroll-reveal.is-visible .stat,
 .scroll-reveal.is-visible .product-card,
 .scroll-reveal.is-visible .steps > * {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
 }
 .scroll-reveal.is-visible .feature-card:nth-child(2),
 .scroll-reveal.is-visible .stat:nth-child(2),
 .scroll-reveal.is-visible .product-card:nth-child(2),
-.scroll-reveal.is-visible .steps > :nth-child(2) { transition-delay: 0.09s; }
+.scroll-reveal.is-visible .steps > :nth-child(2) { transition-delay: 0.08s; }
 .scroll-reveal.is-visible .feature-card:nth-child(3),
 .scroll-reveal.is-visible .stat:nth-child(3),
 .scroll-reveal.is-visible .product-card:nth-child(3),
-.scroll-reveal.is-visible .steps > :nth-child(3) { transition-delay: 0.18s; }
+.scroll-reveal.is-visible .steps > :nth-child(3) { transition-delay: 0.16s; }
 .scroll-reveal.is-visible .feature-card:nth-child(4),
 .scroll-reveal.is-visible .stat:nth-child(4),
 .scroll-reveal.is-visible .product-card:nth-child(4),
-.scroll-reveal.is-visible .steps > :nth-child(4) { transition-delay: 0.27s; }
+.scroll-reveal.is-visible .steps > :nth-child(4) { transition-delay: 0.24s; }
 @keyframes header-enter {
   from { opacity: 0; transform: translateY(-14px); }
   to { opacity: 1; transform: translateY(0); }
@@ -71,6 +69,7 @@ html { scroll-behavior: smooth; }
   .hero-entrance .hero-copy > *,
   .hero-entrance .hero-visual { animation: none; }
   .scroll-reveal,
+  .scroll-reveal .reveal-text,
   .scroll-reveal .feature-card,
   .scroll-reveal .stat,
   .scroll-reveal .product-card,

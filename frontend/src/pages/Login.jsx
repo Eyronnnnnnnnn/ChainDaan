@@ -227,7 +227,7 @@ export function SignIn() {
             <div><b>100%</b><span>Secure</span></div>
           </div>
         </div>
-        <div className="register-mascot" aria-label="Chain Daan representative"><span>hello</span></div>
+        
       </section>
 
       <section className="register-panel login-panel">
