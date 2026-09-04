@@ -10,7 +10,7 @@
   flex: 0 0 242px;
   display: flex;
   flex-direction: column;
-  padding: 26px 16px 20px;
+  padding: 22px 16px 20px;
   border-right: 1px solid #e4e9f2;
   background: #fff;
 }
@@ -23,17 +23,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  box-sizing: border-box;
+  padding: 0 8px;
   color: #14234f;
   font-size: 18px;
   font-weight: 900;
-  width: 100px;
+  width: 100%;
 }
 .brand-logo-frame {
   position: relative;
   display: block;
-  width: 180px;
-  height: 128px;
+  width: 160px;
+  height: 96px;
   margin: 0 auto;
   overflow: hidden;
 }
@@ -51,7 +52,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 38px 8px 28px;
+  margin: 22px 8px 24px;
   padding: 12px 9px;
   border: 1px solid #edf0f5;
   border-radius: 12px;
@@ -1353,8 +1354,8 @@
     display: block;
   }
   .brand-logo-frame {
-    width: 158px;
-    height: 112px;
+    width: 148px;
+    height: 88px;
   }
   .dashboard-nav button,
   .sidebar-bottom button,
