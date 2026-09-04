@@ -11,3 +11,24 @@ body {
 * { box-sizing: border-box; }
 a { color: inherit; text-decoration: none; }
 button, input { font: inherit; }
+
+#root {
+  animation: page-enter 420ms ease-out both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root {
+    animation: none;
+  }
+}

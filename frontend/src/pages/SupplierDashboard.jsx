@@ -237,8 +237,7 @@ export default function SupplierDashboard() {
           <XIcon size={18} />
         </button>
         <a href="/" className="dashboard-brand">
-          <span className="brand-mark">CD</span>
-          <span>Chain Daan</span>
+          <img className="brand-mark" src="/images/logo.png" alt="Chain Daan" />
         </a>
         <div
           className="supplier-mini"

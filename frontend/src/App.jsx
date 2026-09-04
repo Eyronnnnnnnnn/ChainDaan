@@ -48,7 +48,6 @@ function ImageSlot({ src, alt, className = "" }) {
           event.currentTarget.style.display = "none";
         }}
       />
-      <span>Place image here</span>
     </div>
   );
 }

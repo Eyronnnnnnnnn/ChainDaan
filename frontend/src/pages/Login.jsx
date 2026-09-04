@@ -132,9 +132,7 @@ export default function Login() {
             ))}
           </ul>
         </div>
-        <div className="register-mascot" aria-label="Chain Daan business partners">
-          <span>Place image here</span>
-        </div>
+        <div className="register-mascot" aria-label="Chain Daan business partners" />
       </section>
 
       <section className="register-panel">
