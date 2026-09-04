@@ -5,6 +5,8 @@ import dns from "node:dns";
 import { createServer } from "node:http";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import mongoose from "mongoose";
 import multer from "multer";
 import nodemailer from "nodemailer";
@@ -14,8 +16,24 @@ import { env } from "./config/env.js";
 
 const app = express();
 const httpServer = createServer(app);
+const isAllowedOrigin = (origin) =>
+  !origin || env.clientOrigins.includes(origin.replace(/\/$/, ""));
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    const error = new Error("Origin is not allowed by this API's CORS policy.");
+    error.status = 403;
+    return callback(error);
+  },
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Authorization", "Content-Type"],
+  exposedHeaders: ["RateLimit", "RateLimit-Policy"],
+  credentials: false,
+  maxAge: 86400,
+  optionsSuccessStatus: 204,
+};
 const io = new SocketServer(httpServer, {
-  cors: { origin: env.clientOrigin },
+  cors: corsOptions,
 });
 const port = env.port;
 const mongoUri = env.mongoUri;
@@ -47,8 +65,48 @@ const upload = multer({
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
-app.use(cors({ origin: env.clientOrigin }));
-app.use(express.json());
+app.set("trust proxy", env.trustProxy);
+app.disable("x-powered-by");
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'none'"],
+        frameAncestors: ["'none'"],
+        objectSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    hsts: env.isProduction
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
+    referrerPolicy: { policy: "no-referrer" },
+  }),
+);
+app.use(cors(corsOptions));
+
+const rateLimitMessage = { error: "Too many requests. Please try again later." };
+const createRateLimiter = (windowMs, limit) =>
+  rateLimit({
+    windowMs,
+    limit,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: rateLimitMessage,
+  });
+const apiLimiter = createRateLimiter(15 * 60 * 1000, 300);
+const authLimiter = createRateLimiter(15 * 60 * 1000, 15);
+const recoveryLimiter = createRateLimiter(60 * 60 * 1000, 5);
+const feedbackLimiter = createRateLimiter(60 * 60 * 1000, 5);
+const uploadLimiter = createRateLimiter(15 * 60 * 1000, 10);
+
+app.use("/api", apiLimiter);
+app.use("/api/auth", authLimiter);
+app.use(express.json({ limit: "100kb", strict: true, type: "application/json" }));
 
 app.get("/", (_request, response) =>
   response.json({
@@ -338,6 +396,7 @@ app.get("/api/health", (_request, response) =>
 );
 app.post(
   "/api/feedback",
+  feedbackLimiter,
   asyncRoute(async (request, response) => {
     const { name, email, message } = request.body;
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
@@ -426,6 +485,7 @@ app.post(
 );
 app.post(
   "/api/auth/forgot-password",
+  recoveryLimiter,
   asyncRoute(async (request, response) => {
     const email = request.body.email?.trim().toLowerCase();
     if (!email) return response.status(400).json({ error: "Enter your email address." });
@@ -786,6 +846,7 @@ app.patch(
 app.post(
   "/api/profiles/:id/photo",
   requireAuth,
+  uploadLimiter,
   upload.single("photo"),
   asyncRoute(async (request, response) => {
     if (request.params.id !== request.auth.sub)
@@ -823,6 +884,7 @@ app.get(
 app.post(
   "/api/products",
   requireAuth,
+  uploadLimiter,
   upload.array("images", 10),
   asyncRoute(async (request, response) => {
     if (request.auth.role !== "supplier")
