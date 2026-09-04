@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
-import Login, { SignIn } from "./pages/Login.jsx";
+import Login, { ForgotPassword, ResetPassword, SignIn } from "./pages/Login.jsx";
 import SupplierDashboard from "./pages/SupplierDashboard.jsx";
 import BusinessDashboard from "./pages/BusinessDashboard.jsx";
 import BusinessProfile from "./pages/BusinessProfile.jsx";
@@ -354,12 +354,40 @@ function Home() {
 
 const ProtectedRoute = ({ children }) => localStorage.getItem("chaindaan_token") ? children : <Navigate to="/login" replace />;
 
+function OAuthResult() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("oauthToken");
+  const encodedUser = params.get("oauthUser");
+  let user = null;
+  if (token && encodedUser) {
+    try {
+      const base64 = encodedUser.replace(/-/g, "+").replace(/_/g, "/");
+      user = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")));
+    } catch {
+      user = null;
+    }
+  }
+
+  useEffect(() => {
+    if (!token || !user) return;
+    localStorage.setItem("chaindaan_token", token);
+    localStorage.setItem("chaindaan_user", JSON.stringify(user));
+    window.location.replace(user.role === "business" ? "/business-dashboard" : "/supplier-dashboard");
+  }, [token, user]);
+
+  const message = params.get("oauthError") || (token ? "Facebook sign-in returned invalid account data." : "Facebook sign-in could not be completed.");
+  return <main className="oauth-result" role="status">{user ? "Completing Facebook sign-in..." : message}</main>;
+}
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/register" element={<Login />} />
         <Route path="/login" element={<SignIn />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/oauth/callback" element={<OAuthResult />} />
         <Route path="/privacy" element={<Legal />} />
         <Route path="/terms" element={<Legal />} />
         <Route path="/supplier-dashboard" element={<ProtectedRoute><SupplierDashboard /></ProtectedRoute>} />

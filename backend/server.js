@@ -7,6 +7,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import multer from "multer";
+import nodemailer from "nodemailer";
 import { v2 as cloudinary } from "cloudinary";
 import { Server as SocketServer } from "socket.io";
 import { env } from "./config/env.js";
@@ -20,6 +21,14 @@ const port = env.port;
 const mongoUri = env.mongoUri;
 const scrypt = promisify(crypto.scrypt);
 const authSecret = env.authSecret;
+const mailer = env.smtpHost && env.smtpUser && env.smtpPassword && env.mailFrom
+  ? nodemailer.createTransport({
+      host: env.smtpHost,
+      port: env.smtpPort,
+      secure: env.smtpSecure,
+      auth: { user: env.smtpUser, pass: env.smtpPassword },
+    })
+  : null;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -66,7 +75,10 @@ const profileSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    facebookId: { type: String, unique: true, sparse: true, index: true },
     passwordHash: { type: String, select: false },
+    passwordResetTokenHash: { type: String, select: false },
+    passwordResetExpiresAt: { type: Date, select: false },
     phone: String,
     town: { type: String, index: true },
     about: String,
@@ -234,6 +246,50 @@ function createToken(profile) {
   return `${payload}.${signature}`;
 }
 
+function createOAuthState({ role, intent }) {
+  const payload = Buffer.from(
+    JSON.stringify({
+      role,
+      intent,
+      exp: Date.now() + 1000 * 60 * 10,
+      nonce: crypto.randomBytes(16).toString("hex"),
+    }),
+  ).toString("base64url");
+  const signature = crypto
+    .createHmac("sha256", authSecret)
+    .update(payload)
+    .digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function readOAuthState(state) {
+  const [payload, signature] = (state || "").split(".");
+  if (!payload || !signature) return null;
+  const expected = crypto
+    .createHmac("sha256", authSecret)
+    .update(payload)
+    .digest("base64url");
+  if (
+    signature.length !== expected.length ||
+    !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  )
+    return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return data.exp > Date.now() && ["business", "supplier"].includes(data.role)
+      ? data
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function oauthFailure(response, message) {
+  response.redirect(
+    `${env.clientOrigin}/oauth/callback?oauthError=${encodeURIComponent(message)}`,
+  );
+}
+
 function getTokenProfileFromToken(token) {
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return null;
@@ -365,6 +421,142 @@ app.post(
       token: createToken(profile),
       user: publicProfile(profile),
     });
+  }),
+);
+app.post(
+  "/api/auth/forgot-password",
+  asyncRoute(async (request, response) => {
+    const email = request.body.email?.trim().toLowerCase();
+    if (!email) return response.status(400).json({ error: "Enter your email address." });
+    if (!mailer)
+      return response.status(503).json({
+        error: "Password reset email is not configured yet. Contact support for help.",
+      });
+
+    const profile = await Profile.findOne({ email }).select("+passwordResetTokenHash +passwordResetExpiresAt");
+    if (profile) {
+      const token = crypto.randomBytes(32).toString("hex");
+      profile.passwordResetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      profile.passwordResetExpiresAt = new Date(Date.now() + 1000 * 60 * 60);
+      await profile.save();
+      const resetUrl = new URL(`${env.clientOrigin}/reset-password`);
+      resetUrl.searchParams.set("token", token);
+      try {
+        await mailer.sendMail({
+          from: env.mailFrom,
+          to: profile.email,
+          subject: "Reset your Chain Daan password",
+          text: `We received a request to reset your Chain Daan password. Reset it within one hour: ${resetUrl}`,
+          html: `<p>We received a request to reset your Chain Daan password.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in one hour. If you did not request it, you can ignore this email.</p>`,
+        });
+      } catch (error) {
+        profile.passwordResetTokenHash = undefined;
+        profile.passwordResetExpiresAt = undefined;
+        await profile.save();
+        console.error("Password reset email failed:", error.message);
+        return response.status(503).json({ error: "We could not send the reset email. Please try again later." });
+      }
+    }
+    response.json({ message: "If an account matches that email, a password reset link has been sent." });
+  }),
+);
+app.post(
+  "/api/auth/reset-password",
+  asyncRoute(async (request, response) => {
+    const { token, password, confirmPassword } = request.body;
+    if (!token || !password || !confirmPassword)
+      return response.status(400).json({ error: "Complete all required fields." });
+    if (password.length < 8)
+      return response.status(400).json({ error: "Password must be at least 8 characters." });
+    if (password !== confirmPassword)
+      return response.status(400).json({ error: "Passwords do not match." });
+    const passwordResetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const profile = await Profile.findOne({
+      passwordResetTokenHash,
+      passwordResetExpiresAt: { $gt: new Date() },
+    }).select("+passwordResetTokenHash +passwordResetExpiresAt");
+    if (!profile)
+      return response.status(400).json({ error: "This password reset link is invalid or has expired." });
+    profile.passwordHash = await hashPassword(password);
+    profile.passwordResetTokenHash = undefined;
+    profile.passwordResetExpiresAt = undefined;
+    await profile.save();
+    response.json({ message: "Your password has been reset. You can now sign in." });
+  }),
+);
+app.get("/api/auth/facebook", (request, response) => {
+  if (!env.facebookAppId || !env.facebookAppSecret)
+    return response.status(503).json({
+      error: "Facebook sign-in is not configured. Add FACEBOOK_APP_ID and FACEBOOK_APP_SECRET to the API environment.",
+    });
+  const role = request.query.role;
+  const intent = request.query.intent;
+  if (!['business', 'supplier'].includes(role) || !['signin', 'signup'].includes(intent))
+    return response.status(400).json({ error: "Invalid Facebook sign-in request." });
+  const authorizationUrl = new URL("https://www.facebook.com/v22.0/dialog/oauth");
+  authorizationUrl.search = new URLSearchParams({
+    client_id: env.facebookAppId,
+    redirect_uri: env.facebookRedirectUri,
+    response_type: "code",
+    scope: "email,public_profile",
+    state: createOAuthState({ role, intent }),
+  });
+  response.redirect(authorizationUrl.toString());
+});
+app.get(
+  "/api/auth/facebook/callback",
+  asyncRoute(async (request, response) => {
+    const state = readOAuthState(request.query.state);
+    if (!state) return oauthFailure(response, "Facebook sign-in expired. Please try again.");
+    if (request.query.error)
+      return oauthFailure(response, "Facebook sign-in was cancelled or not authorized.");
+    if (!request.query.code)
+      return oauthFailure(response, "Facebook did not return an authorization code.");
+
+    const tokenUrl = new URL("https://graph.facebook.com/v22.0/oauth/access_token");
+    tokenUrl.search = new URLSearchParams({
+      client_id: env.facebookAppId,
+      client_secret: env.facebookAppSecret,
+      redirect_uri: env.facebookRedirectUri,
+      code: request.query.code,
+    });
+    const tokenResult = await fetch(tokenUrl);
+    const tokenData = await tokenResult.json();
+    if (!tokenResult.ok || !tokenData.access_token)
+      return oauthFailure(response, "Facebook sign-in could not be completed. Please try again.");
+
+    const profileUrl = new URL("https://graph.facebook.com/me");
+    profileUrl.search = new URLSearchParams({
+      fields: "id,name,email",
+      access_token: tokenData.access_token,
+    });
+    const profileResult = await fetch(profileUrl);
+    const facebookProfile = await profileResult.json();
+    if (!profileResult.ok || !facebookProfile.id || !facebookProfile.email)
+      return oauthFailure(response, "Facebook must share your name and email address to sign in.");
+
+    const email = facebookProfile.email.trim().toLowerCase();
+    let profile = await Profile.findOne({
+      $or: [{ facebookId: facebookProfile.id }, { email }],
+    });
+    if (!profile && state.intent === "signin")
+      return oauthFailure(response, "No Chain Daan account is linked to this Facebook account. Create an account first.");
+    if (!profile) {
+      profile = await Profile.create({
+        role: state.role,
+        fullName: facebookProfile.name?.trim() || email,
+        name: facebookProfile.name?.trim() || email,
+        email,
+        facebookId: facebookProfile.id,
+      });
+    } else if (!profile.facebookId) {
+      profile.facebookId = facebookProfile.id;
+      await profile.save();
+    }
+    const redirectUrl = new URL(`${env.clientOrigin}/oauth/callback`);
+    redirectUrl.searchParams.set("oauthToken", createToken(profile));
+    redirectUrl.searchParams.set("oauthUser", Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url"));
+    response.redirect(redirectUrl.toString());
   }),
 );
 app.get(

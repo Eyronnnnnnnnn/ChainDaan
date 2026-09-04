@@ -104,7 +104,12 @@ export default function Login() {
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
-    setSocialMessage(`${provider} sign-up needs OAuth credentials to be configured first.`);
+    if (provider !== "Facebook") {
+      setSocialMessage("Google sign-up is coming soon.");
+      return;
+    }
+    const apiUrl = import.meta.env.VITE_API_URL || "";
+    window.location.assign(`${apiUrl}/api/auth/facebook?role=${role}&intent=signup`);
   }
 
   return (
@@ -202,7 +207,12 @@ export function SignIn() {
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
-    setSocialMessage(`${provider} sign-in needs OAuth credentials to be configured first.`);
+    if (provider !== "Facebook") {
+      setSocialMessage("Google sign-in is coming soon.");
+      return;
+    }
+    const apiUrl = import.meta.env.VITE_API_URL || "";
+    window.location.assign(`${apiUrl}/api/auth/facebook?role=${role}&intent=signin`);
   }
   return (
     <div className="auth-shell">
@@ -244,7 +254,7 @@ export function SignIn() {
           <Field name="password" value={form.password} onChange={update} label="PASSWORD" placeholder="••••••••" type="password" icon={<UserIcon size={14} />} />
           <div className="login-options">
             <label><input type="checkbox" /> Remember me</label>
-            <a href="#forgot-password">Forgot password?</a>
+            <a href="/forgot-password">Forgot password?</a>
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <button className="sign-in-button" type="submit" disabled={saving}>{saving ? "Signing in..." : "Sign In to Dashboard"}</button>
@@ -258,4 +268,75 @@ export function SignIn() {
       <AuthFooter />
     </div>
   );
+}
+
+export function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  async function submit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      const data = await request("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      setMessage(data.message);
+    } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
+  }
+  return <PasswordRecovery title="Reset your password" subtitle="Enter your email and we’ll send you a reset link.">
+    <form className="login-form" onSubmit={submit}>
+      <Field name="email" value={email} onChange={(event) => setEmail(event.target.value)} label="EMAIL ADDRESS" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {message && <p className="form-success" role="status">{message}</p>}
+      <button className="sign-in-button" type="submit" disabled={saving}>{saving ? "Sending..." : "Send reset link"}</button>
+    </form>
+    <p className="sign-in register-prompt">Remember your password? <a href="/login">Sign in</a></p>
+  </PasswordRecovery>;
+}
+
+export function ResetPassword() {
+  const navigate = useNavigate();
+  const token = new URLSearchParams(window.location.search).get("token") || "";
+  const [form, setForm] = useState({ password: "", confirmPassword: "" });
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const update = (event) => setForm({ ...form, [event.target.name]: event.target.value });
+  async function submit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      const data = await request("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, ...form }) });
+      setMessage(data.message);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
+  }
+  return <PasswordRecovery title="Choose a new password" subtitle="Your new password must have at least 8 characters.">
+    <form className="login-form" onSubmit={submit}>
+      <Field name="password" value={form.password} onChange={update} label="NEW PASSWORD" placeholder="Min. 8 characters" type="password" icon={<UserIcon size={14} />} />
+      <Field name="confirmPassword" value={form.confirmPassword} onChange={update} label="CONFIRM NEW PASSWORD" placeholder="Re-enter password" type="password" icon={<UserIcon size={14} />} />
+      {!token && <p className="form-error" role="alert">This password reset link is invalid.</p>}
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {message && <p className="form-success" role="status">{message}</p>}
+      <button className="sign-in-button" type="submit" disabled={saving || !token}>{saving ? "Resetting..." : "Reset password"}</button>
+    </form>
+  </PasswordRecovery>;
+}
+
+function PasswordRecovery({ title, subtitle, children }) {
+  return <div className="auth-shell">
+    <AuthHeader />
+    <main className="password-recovery"><section className="register-panel login-panel">
+      <a className="back-link" href="/login">← Back to sign in</a>
+      <h2>{title}</h2>
+      <p className="register-subtitle">{subtitle}</p>
+      {children}
+    </section></main>
+    <AuthFooter />
+  </div>;
 }
