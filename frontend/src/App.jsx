@@ -79,6 +79,27 @@ function Home() {
       "truck",
     ],
   ];
+  useEffect(() => {
+    const elements = document.querySelectorAll(".scroll-reveal");
+    if (!window.IntersectionObserver) {
+      elements.forEach((element) => element.classList.add("is-visible"));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -48px" },
+    );
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+
   function submitFeedback(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -139,7 +160,7 @@ function Home() {
         </div>
       </header>
       <main id="top">
-        <section className="hero-section">
+        <section className="hero-section hero-entrance">
           <div className="hero-copy">
             <p className="eyebrow light">LOCAL SOURCING, MADE SIMPLE</p>
             <h1>
@@ -191,7 +212,7 @@ function Home() {
             </div>
           </div>
         </section>
-        <section className="feature-section" id="business">
+        <section className="feature-section scroll-reveal" id="business">
           <div className="feature-grid">
             {features.map(([title, text, icon]) => (
               <article className="feature-card" key={title}>
@@ -232,7 +253,7 @@ function Home() {
             ))}
           </div>
         </section>
-        <section className="stats-section" id="suppliers">
+        <section className="stats-section scroll-reveal" id="suppliers">
           <div className="stat">
             <b>20+</b>
             <span>Municipalities Covered</span>
@@ -250,7 +271,7 @@ function Home() {
             <span>Secure Platform</span>
           </div>
         </section>
-        <section className="how-section" id="about">
+        <section className="how-section scroll-reveal" id="about">
           <div className="how-copy">
             <p className="eyebrow">HOW IT WORKS</p>
             <h2>
@@ -296,11 +317,11 @@ function Home() {
             
           />
         </section>
-        <section className="products-section" id="products">
+        <section className="products-section scroll-reveal" id="products">
           <div className="section-heading"><div><p className="eyebrow">FEATURED</p><h2>Popular Products</h2></div><a href="#suppliers">View All <span>›</span></a></div>
           <div className="products-grid">{products.map(([name, category, supplier, price, image]) => <article className="product-card" key={name}><ImageSlot src={`/images/${image}`} alt={name} className="product-image" /><div className="product-info"><small>{category}</small><h3>{name}</h3><p>{supplier}</p><div className="product-bottom"><strong>{price}</strong><button className="button button-gold" type="button">Add</button></div></div></article>)}</div>
         </section>
-        <section className="contact-section" id="contact">
+        <section className="contact-section scroll-reveal" id="contact">
           <div className="contact-copy">
             <p className="eyebrow">GET IN TOUCH</p>
             <h2>Contact the developer</h2>
@@ -317,7 +338,7 @@ function Home() {
             <button className="button button-blue" type="submit">Send feedback <span>›</span></button>
           </form>
         </section>
-        <section className="cta-section" id="register">
+        <section className="cta-section scroll-reveal" id="register">
           <h2>
             Ready to grow your business
             <br />
@@ -337,7 +358,7 @@ function Home() {
           </div>
         </section>
       </main>
-      <footer>
+      <footer className="scroll-reveal">
         <span>
           © 2026 Chain Daan. All rights reserved. Connecting Businesses in
           Ilocos Norte.
