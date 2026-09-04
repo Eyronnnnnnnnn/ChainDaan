@@ -7,7 +7,6 @@ import BusinessDashboard from "./pages/BusinessDashboard.jsx";
 import BusinessProfile from "./pages/BusinessProfile.jsx";
 import Legal from "./pages/Legal.jsx";
 import { readJsonResponse } from "./api/client.js";
-import HamburgerMenu from "./components/HamburgerMenu.jsx";
 const Icon = ({ children, size = 22 }) => (
   <svg
     width={size}
