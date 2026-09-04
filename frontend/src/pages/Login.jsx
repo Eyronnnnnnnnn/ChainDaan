@@ -86,7 +86,6 @@ export default function Login() {
   const [form, setForm] = useState({ fullName: "", name: "", email: "", phone: "", town: "", category: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [socialMessage, setSocialMessage] = useState("");
   const isBusiness = role === "business";
   const update = (event) => { setForm({ ...form, [event.target.name]: event.target.value }); setError(""); };
   async function register(event) {
@@ -104,12 +103,9 @@ export default function Login() {
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
-    if (provider !== "Facebook") {
-      setSocialMessage("Google sign-up is coming soon.");
-      return;
-    }
     const apiUrl = import.meta.env.VITE_API_URL || "";
-    window.location.assign(`${apiUrl}/api/auth/facebook?role=${role}&intent=signup`);
+    const service = provider === "Google" ? "google" : "facebook";
+    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signup`);
   }
 
   return (
@@ -175,7 +171,6 @@ export default function Login() {
         </form>
         <div className="continue-divider"><span>or continue with</span></div>
         <SocialButtons onProvider={continueWith} />
-        {socialMessage && <p className="social-message" role="status">{socialMessage}</p>}
         <p className="sign-in">Already have an account? <a href="/login">Sign in</a></p>
       </section>
       </main>
@@ -190,7 +185,6 @@ export function SignIn() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [socialMessage, setSocialMessage] = useState("");
   const update = (event) => { setForm({ ...form, [event.target.name]: event.target.value }); setError(""); };
   async function signIn(event) {
     event.preventDefault();
@@ -207,12 +201,9 @@ export function SignIn() {
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
-    if (provider !== "Facebook") {
-      setSocialMessage("Google sign-in is coming soon.");
-      return;
-    }
     const apiUrl = import.meta.env.VITE_API_URL || "";
-    window.location.assign(`${apiUrl}/api/auth/facebook?role=${role}&intent=signin`);
+    const service = provider === "Google" ? "google" : "facebook";
+    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signin`);
   }
   return (
     <div className="auth-shell">
@@ -238,7 +229,7 @@ export function SignIn() {
             <div><b>100%</b><span>Secure</span></div>
           </div>
         </div>
-        <div className="register-mascot" aria-label="Chain Daan representative"><span>Place image here</span></div>
+        <div className="register-mascot" aria-label="Chain Daan representative"><span>hello</span></div>
       </section>
 
       <section className="register-panel login-panel">
@@ -261,7 +252,6 @@ export function SignIn() {
         </form>
         <div className="continue-divider"><span>or continue with</span></div>
         <SocialButtons onProvider={continueWith} />
-        {socialMessage && <p className="social-message" role="status">{socialMessage}</p>}
         <p className="sign-in register-prompt">Don&apos;t have an account? <a href="/register">Create one free</a></p>
       </section>
       </main>

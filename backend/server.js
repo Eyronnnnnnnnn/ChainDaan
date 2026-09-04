@@ -76,6 +76,7 @@ const profileSchema = new mongoose.Schema(
       trim: true,
     },
     facebookId: { type: String, unique: true, sparse: true, index: true },
+    googleId: { type: String, unique: true, sparse: true, index: true },
     passwordHash: { type: String, select: false },
     passwordResetTokenHash: { type: String, select: false },
     passwordResetExpiresAt: { type: Date, select: false },
@@ -482,6 +483,82 @@ app.post(
     profile.passwordResetExpiresAt = undefined;
     await profile.save();
     response.json({ message: "Your password has been reset. You can now sign in." });
+  }),
+);
+app.get("/api/auth/google", (request, response) => {
+  if (!env.googleClientId || !env.googleClientSecret)
+    return response.status(503).json({
+      error: "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to the API environment.",
+    });
+  const role = request.query.role;
+  const intent = request.query.intent;
+  if (!["business", "supplier"].includes(role) || !["signin", "signup"].includes(intent))
+    return response.status(400).json({ error: "Invalid Google sign-in request." });
+  const authorizationUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  authorizationUrl.search = new URLSearchParams({
+    client_id: env.googleClientId,
+    redirect_uri: env.googleRedirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    prompt: "select_account",
+    state: createOAuthState({ role, intent }),
+  });
+  response.redirect(authorizationUrl.toString());
+});
+app.get(
+  "/api/auth/google/callback",
+  asyncRoute(async (request, response) => {
+    const state = readOAuthState(request.query.state);
+    if (!state) return oauthFailure(response, "Google sign-in expired. Please try again.");
+    if (request.query.error)
+      return oauthFailure(response, "Google sign-in was cancelled or not authorized.");
+    if (!request.query.code)
+      return oauthFailure(response, "Google did not return an authorization code.");
+
+    const tokenResult = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code: request.query.code,
+        client_id: env.googleClientId,
+        client_secret: env.googleClientSecret,
+        redirect_uri: env.googleRedirectUri,
+        grant_type: "authorization_code",
+      }),
+    });
+    const tokenData = await tokenResult.json();
+    if (!tokenResult.ok || !tokenData.access_token)
+      return oauthFailure(response, "Google sign-in could not be completed. Please try again.");
+
+    const profileResult = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const googleProfile = await profileResult.json();
+    if (!profileResult.ok || !googleProfile.sub || !googleProfile.email || googleProfile.email_verified === false)
+      return oauthFailure(response, "Google must share a verified email address to sign in.");
+
+    const email = googleProfile.email.trim().toLowerCase();
+    let profile = await Profile.findOne({
+      $or: [{ googleId: googleProfile.sub }, { email }],
+    });
+    if (!profile && state.intent === "signin")
+      return oauthFailure(response, "No Chain Daan account is linked to this Google account. Create an account first.");
+    if (!profile) {
+      profile = await Profile.create({
+        role: state.role,
+        fullName: googleProfile.name?.trim() || email,
+        name: googleProfile.name?.trim() || email,
+        email,
+        googleId: googleProfile.sub,
+      });
+    } else if (!profile.googleId) {
+      profile.googleId = googleProfile.sub;
+      await profile.save();
+    }
+    const redirectUrl = new URL(`${env.clientOrigin}/oauth/callback`);
+    redirectUrl.searchParams.set("oauthToken", createToken(profile));
+    redirectUrl.searchParams.set("oauthUser", Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url"));
+    response.redirect(redirectUrl.toString());
   }),
 );
 app.get("/api/auth/facebook", (request, response) => {

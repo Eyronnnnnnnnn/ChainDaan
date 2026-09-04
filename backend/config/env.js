@@ -10,6 +10,11 @@ export const env = {
   facebookRedirectUri:
     process.env.FACEBOOK_REDIRECT_URI ||
     "http://localhost:4000/api/auth/facebook/callback",
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  googleRedirectUri:
+    process.env.GOOGLE_REDIRECT_URI ||
+    "http://localhost:4000/api/auth/google/callback",
   smtpHost: process.env.SMTP_HOST,
   smtpPort: Number(process.env.SMTP_PORT || 587),
   smtpSecure: process.env.SMTP_SECURE === "true",

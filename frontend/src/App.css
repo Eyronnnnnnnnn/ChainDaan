@@ -34,8 +34,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: repeating-conic-gradient(#f2f4f8 0 25%, #fff 0 50%) 50% / 18px
-    18px;
+  background-color: none;
   color: #7c8ba7;
 }
 .image-slot img {
@@ -46,6 +45,8 @@ html { scroll-behavior: smooth; }
   inset: 0;
   z-index: 1;
 }
+
+
 .image-slot span {
   font-size: 12px;
   letter-spacing: 0.04em;

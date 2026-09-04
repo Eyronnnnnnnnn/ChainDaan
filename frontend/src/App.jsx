@@ -294,6 +294,7 @@ function Home() {
             src={images.delivery}
             alt="Local delivery handoff"
             className="delivery-image"
+            
           />
         </section>
         <section className="products-section" id="products">
