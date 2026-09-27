@@ -818,6 +818,7 @@ function Products({
       </div>
       <section className="dashboard-card product-management">
         <div className="product-table-head">
+          <span aria-hidden="true" />
           <span>PRODUCT</span>
           <span>CATEGORY</span>
           <span>PRICE</span>

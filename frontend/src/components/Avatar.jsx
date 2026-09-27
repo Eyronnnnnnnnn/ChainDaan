@@ -5,8 +5,8 @@ export default function Avatar({
   user,
   src,
   name,
-  size = "normal", // "small" | "normal" | "large" | "chat"
-  color = "blue",  // "blue" | "orange" | "green" | "gold"
+  size = "normal",
+  color = "blue", 
   className = "",
   alt = "Profile avatar",
 }) {
