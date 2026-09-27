@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import "./SupplierDashboard.css";
+import "./DashboardTheme.css";
 import { chatApi, orderApi, profileApi, request } from "../api/client.js";
 import { getCurrentUser, logout } from "../lib/session.js";
 import { idValue, mergeConversations, mergeMessages } from "../lib/chat.js";

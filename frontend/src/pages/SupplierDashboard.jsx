@@ -3,6 +3,7 @@ import { CategoryScale, Chart as ChartJS, Filler, LinearScale, LineElement, Poin
 import { Line } from "react-chartjs-2";
 import { io } from "socket.io-client";
 import "./SupplierDashboard.css";
+import "./DashboardTheme.css";
 import { getCurrentUser, logout } from "../lib/session.js";
 import { idValue, mergeMessages } from "../lib/chat.js";
 import { chatApi, orderApi, productApi, profileApi } from "../api/client.js";

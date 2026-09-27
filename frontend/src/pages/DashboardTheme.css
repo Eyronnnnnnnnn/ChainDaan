@@ -1,0 +1,172 @@
+/* Shared iOS-inspired appearance; responsive layout remains in SupplierDashboard.css. */
+.dashboard-shell {
+  --ios-bg: #f5f5f7;
+  --ios-surface: #fff;
+  --ios-inset: #f2f2f7;
+  --ios-glass: rgb(255 255 255 / 80%);
+  --ios-text: #1d1d1f;
+  --ios-secondary: #68686e;
+  --ios-blue: #007aff;
+  --ios-tint: #edf5ff;
+  --ios-line: rgb(60 60 67 / 10%);
+  --ios-shadow: 0 2px 4px rgb(0 0 0 / 2%), 0 12px 32px rgb(0 0 0 / 3%);
+  --dashboard-border: var(--ios-line);
+  --dashboard-muted: var(--ios-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ios-text);
+  background: radial-gradient(ellipse at 90% 0, #eaf2ff 0, transparent 42%), var(--ios-bg);
+  letter-spacing: -.015em;
+}
+.dashboard-shell.dark-mode {
+  --ios-bg: #09090b;
+  --ios-surface: #1c1c1e;
+  --ios-inset: #29292d;
+  --ios-glass: rgb(28 28 30 / 85%);
+  --ios-text: #f5f5f7;
+  --ios-secondary: #a1a1aa;
+  --ios-blue: #64aaff;
+  --ios-tint: #182d49;
+  --ios-line: rgb(235 235 245 / 12%);
+  --ios-shadow: 0 8px 28px rgb(0 0 0 / 16%);
+  --dashboard-border: var(--ios-line);
+  --dashboard-muted: var(--ios-secondary);
+  color: var(--ios-text);
+  background: radial-gradient(ellipse at 90% 0, #12223b 0, transparent 40%), var(--ios-bg);
+}
+.dashboard-shell :is(h1, h2, h3, h4, b, strong) { color: var(--ios-text); }
+.dashboard-shell :is(.dashboard-sidebar, .dashboard-topbar) { background: var(--ios-glass); border-color: var(--ios-line); box-shadow: none; backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); }
+.dashboard-shell .dashboard-sidebar { padding: 24px 18px; }
+.dashboard-shell .brand-logo-frame { width: 134px; height: 82px; border-radius: 18px; }
+.dashboard-shell .supplier-mini { background: var(--ios-surface); border: 1px solid var(--ios-line); border-radius: 18px; padding: 13px 10px; margin: 24px 0 28px; box-shadow: 0 2px 5px rgb(0 0 0 / 2%); }
+.dashboard-shell .supplier-mini b { font-size: 12px; }
+.dashboard-shell .supplier-mini span { color: var(--ios-secondary); }
+.dashboard-shell .dashboard-nav { gap: 7px; }
+.dashboard-shell :is(.dashboard-nav button, .sidebar-bottom button) { border: 1px solid transparent; border-radius: 13px; min-height: 46px; color: var(--ios-secondary); font-size: 13px; font-weight: 500; transition: background 160ms ease, color 160ms ease; }
+.dashboard-shell .dashboard-nav button.active { background: #007aff; color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgb(0 122 255 / 22%); }
+.dashboard-shell .dashboard-nav button:hover:not(.active), .dashboard-shell .sidebar-bottom button:hover { background: var(--ios-inset); }
+.dashboard-shell .dashboard-nav em { background: #ff9f0a; color: #fff; border-radius: 8px; font-size: 10px; }
+.dashboard-shell .sidebar-bottom { border-color: var(--ios-line); }
+.dashboard-shell .dashboard-topbar { min-height: 82px; }
+.dashboard-shell .dashboard-topbar h1 { font-size: 21px; font-weight: 650; letter-spacing: -.035em; }
+.dashboard-shell .dashboard-kicker { color: var(--ios-secondary); font-size: 10px; letter-spacing: .12em; font-weight: 600; }
+.dashboard-shell :is(.icon-button, .theme-toggle, .mobile-menu-button, .mobile-sidebar-close) { background: var(--ios-surface); color: var(--ios-secondary); border: 1px solid var(--ios-line); border-radius: 50%; }
+.dashboard-shell .topbar-user { color: var(--ios-text); font-weight: 500; }
+.dashboard-shell .icon-button b { color: #fff; background: #ff453a; }
+.dashboard-shell .dashboard-content { padding-top: 40px; }
+.dashboard-shell .welcome-row { gap: 20px; margin-bottom: 30px; }
+.dashboard-shell .welcome-row h2 { font-size: clamp(27px, 2.7vw, 36px); font-weight: 700; letter-spacing: -.045em; line-height: 1.15; margin-bottom: 10px; }
+.dashboard-shell .welcome-row p { font-size: 14px; color: var(--ios-secondary); }
+.dashboard-shell .welcome-row .dashboard-kicker { font-size: 10px; margin-bottom: 12px; }
+.dashboard-shell :is(.primary-action, .contact-button, .secondary-action, .btn-order-now, .btn-action, .delete-account-button) { min-height: 44px; border-radius: 999px; font-weight: 600; font-size: 13px; padding: 11px 20px; letter-spacing: -.01em; transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.dashboard-shell :is(.primary-action, .btn-order-now) { background: #007aff; color: #fff; box-shadow: 0 3px 8px rgb(0 122 255 / 15%); }
+.dashboard-shell :is(.primary-action, .btn-order-now):hover:not(:disabled) { background: #0066db; box-shadow: 0 5px 14px rgb(0 122 255 / 22%); }
+.dashboard-shell :is(.contact-button, .secondary-action) { background: var(--ios-tint); color: var(--ios-blue); border-color: transparent; }
+.dashboard-shell .contact-button:hover { background: #007aff; color: #fff; }
+.dashboard-shell button:active:not(:disabled) { transform: scale(.98); }
+.dashboard-shell .delete-account-button { background: transparent; color: #e43a35; border-color: rgb(255 59 48 / 22%); }
+.dashboard-shell :is(.dashboard-card, .metric-card, .supplier-card, .order-card, .messages-layout, .product-modal, .notification-panel, .supplier-detail-product) { background: var(--ios-surface); border: 1px solid var(--ios-line); border-radius: 24px; box-shadow: var(--ios-shadow); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.dashboard-shell .metric-grid { gap: 18px; margin-bottom: 28px; }
+.dashboard-shell .metric-card { position: relative; grid-template-columns: minmax(0, 1fr) 38px; gap: 10px; padding: 22px; }
+.dashboard-shell .metric-icon { grid-column: 2; grid-row: 1; width: 38px; height: 38px; border-radius: 12px; background: #eaf3ff; color: #007aff; }
+.dashboard-shell .metric-card > span:not(.metric-icon) { grid-column: 1; grid-row: 1; align-self: center; color: var(--ios-secondary); font-size: 12px; font-weight: 500; }
+.dashboard-shell .metric-card b { grid-column: 1 / -1; font-size: clamp(30px, 3vw, 40px); font-weight: 650; line-height: 1.1; letter-spacing: -.055em; }
+.dashboard-shell .metric-card small { grid-column: 1 / -1; color: var(--ios-secondary); font-size: 11px; }
+.dashboard-shell .metric-card:nth-child(2) .metric-icon { background: #fff3df; color: #b77900; }
+.dashboard-shell .metric-card:nth-child(3) .metric-icon { background: #efeaff; color: #8058d8; }
+.dashboard-shell .metric-card:nth-child(4) .metric-icon { background: #e7f6ee; color: #238955; }
+.dashboard-shell .dashboard-card { padding: 26px; }
+.dashboard-shell .card-heading { margin-bottom: 22px; }
+.dashboard-shell .card-heading h3 { font-size: 18px; font-weight: 650; letter-spacing: -.025em; }
+.dashboard-shell .card-heading button { color: var(--ios-blue); font-size: 12px; font-weight: 500; }
+.dashboard-shell :is(.product-row, .product-table-row, .order-card-head, .order-card-body, .supplier-detail-head, .supplier-detail-body) { border-color: var(--ios-line); }
+.dashboard-shell .product-row { padding: 16px 0; }
+.dashboard-shell :is(.product-row b, .product-table-row b) { font-size: 13px; font-weight: 600; }
+.dashboard-shell :is(.product-row span:not(.order-status-badge), .product-row small, .product-table-row span, .product-table-head) { color: var(--ios-secondary); }
+.dashboard-shell .product-art { border-radius: 15px; background: var(--ios-tint); color: var(--ios-blue); }
+.dashboard-shell :is(.directory-search, .directory-toolbar select, .products-toolbar select, .chat-search, .profile-fields input, .profile-fields select, .profile-fields textarea, .product-modal input, .product-modal select) { background: var(--ios-inset); color: var(--ios-text); border: 1px solid transparent; border-radius: 13px; box-shadow: inset 0 1px 2px rgb(0 0 0 / 2%); backdrop-filter: none; }
+.dashboard-shell :is(.directory-search, .directory-toolbar select, .products-toolbar select, .chat-search) { height: 46px; }
+.dashboard-shell .directory-toolbar { gap: 12px; margin-bottom: 26px; }
+.dashboard-shell .directory-search { color: var(--ios-secondary); }
+.dashboard-shell .directory-search input { color: var(--ios-text); background: transparent; }
+.dashboard-shell input::placeholder, .dashboard-shell textarea::placeholder { color: var(--ios-secondary); opacity: 1; }
+.dashboard-shell .directory-search:focus-within { box-shadow: 0 0 0 3px rgb(0 122 255 / 16%); }
+.dashboard-shell :is(.supplier-card, .order-card) { padding: 26px; }
+.dashboard-shell .supplier-card h3 { color: var(--ios-text); font-size: 17px; letter-spacing: -.025em; }
+.dashboard-shell .supplier-card > p { color: var(--ios-secondary); font-size: 13px; }
+.dashboard-shell .supplier-card-head { gap: 13px; }
+.dashboard-shell .supplier-card-head .profile-avatar { width: 46px; height: 46px; flex-basis: 46px; }
+.dashboard-shell :is(.supplier-products span, .category-pill) { background: var(--ios-inset); color: var(--ios-secondary); border: 0; border-radius: 7px; font-size: 11px; }
+.dashboard-shell .supplier-products { gap: 7px; margin-bottom: 24px; }
+.dashboard-shell .meta-tag { border-radius: 8px; }
+.dashboard-shell :is(.business-price, .order-prod-details strong) { color: var(--ios-text); font-size: 22px; letter-spacing: -.04em; }
+.dashboard-shell :is(.orders-filter-pills, .period-filter) { padding: 4px; gap: 3px; background: var(--ios-inset); border: 1px solid var(--ios-line); border-radius: 13px; }
+.dashboard-shell :is(.orders-filter-pills button, .period-filter button) { min-height: 34px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--ios-secondary); font-size: 12px; }
+.dashboard-shell :is(.orders-filter-pills button.active, .period-filter button.selected) { background: var(--ios-surface); color: var(--ios-text); box-shadow: 0 2px 5px rgb(0 0 0 / 9%); border-color: var(--ios-line); }
+.dashboard-shell .order-status-badge { font-size: 10px; border: 0; border-radius: 7px; }
+.dashboard-shell .profile-cover { margin: -26px -26px 28px; padding: 30px; background: linear-gradient(125deg, var(--ios-tint), var(--ios-surface)); border-color: var(--ios-line); border-radius: 24px 24px 0 0; backdrop-filter: none; }
+.dashboard-shell .profile-cover-name { font-size: 28px; letter-spacing: -.04em; }
+.dashboard-shell .profile-meta-chip { background: var(--ios-surface); border-color: var(--ios-line); border-radius: 8px; color: var(--ios-secondary); }
+.dashboard-shell .profile-fields label { font-size: 11px; font-weight: 600; letter-spacing: .015em; color: var(--ios-secondary); }
+.dashboard-shell .profile-fields input, .dashboard-shell .profile-fields select { min-height: 46px; }
+.dashboard-shell .profile-fields textarea { padding: 14px; }
+.dashboard-shell :is(.profile-preview-card, .info-chip, .order-product-snapshot, .order-summary-box) { background: var(--ios-inset); border-color: var(--ios-line); border-radius: 16px; }
+.dashboard-shell :is(.supplier-info-block p, .info-chip span, .supplier-detail-meta, .supplier-contact-name) { color: var(--ios-secondary); }
+.dashboard-shell .chat-list { background: var(--ios-surface); border-color: var(--ios-line); }
+.dashboard-shell .messages-heading h2 { font-size: 25px; letter-spacing: -.04em; }
+.dashboard-shell .chat-preview { width: calc(100% - 16px); margin: 4px 8px; padding: 14px 12px; border: 0; border-radius: 14px; }
+.dashboard-shell .chat-preview.selected { background: var(--ios-tint); box-shadow: none; }
+.dashboard-shell .chat-preview b { color: var(--ios-text); }
+.dashboard-shell :is(.chat-preview span, .chat-preview small) { color: var(--ios-secondary); }
+.dashboard-shell .chat-messages { background: var(--ios-bg); }
+.dashboard-shell :is(.conversation-head, .message-compose) { background: var(--ios-surface); border-color: var(--ios-line); }
+.dashboard-shell .message-bubble { background: var(--ios-inset); color: var(--ios-text); border-radius: 19px; font-size: 13px; }
+.dashboard-shell .message-bubble.mine { background: #007aff; color: #fff; border-bottom-right-radius: 6px; }
+.dashboard-shell .message-bubble.theirs { border-bottom-left-radius: 6px; }
+.dashboard-shell .message-compose input { background: var(--ios-inset); border-color: transparent; color: var(--ios-text); }
+.dashboard-shell .message-compose button.send-button { background: #007aff; box-shadow: none; }
+.dashboard-shell .message-compose button.send-button:disabled { background: var(--ios-inset); color: var(--ios-secondary); }
+.dashboard-shell .empty-state { color: var(--ios-secondary); border-color: var(--ios-line); padding: 48px 24px; }
+.dashboard-shell .empty-state p { color: var(--ios-secondary); font-size: 13px; }
+.dashboard-shell .modal-backdrop { background: rgb(0 0 0 / 28%); backdrop-filter: blur(8px); }
+.dashboard-shell .product-modal { border-radius: 28px; }
+.dashboard-shell .notification-panel { border-radius: 20px; }
+.dashboard-shell .notification-panel button { background: var(--ios-tint); color: var(--ios-blue); border-radius: 10px; }
+@media (min-width: 651px) and (max-width: 900px) {
+  .dashboard-shell .dashboard-sidebar { padding: 20px 8px; }
+  .dashboard-shell .brand-logo-frame { width: 50px; height: 50px; border-radius: 12px; }
+  .dashboard-shell .supplier-mini { padding: 8px 0; background: transparent; border: 0; box-shadow: none; }
+  .dashboard-shell :is(.dashboard-nav button, .sidebar-bottom button) { font-size: 0; }
+}
+@media (max-width: 650px) {
+  .dashboard-shell .dashboard-sidebar { padding: 20px 16px; background: var(--ios-glass); }
+  .dashboard-shell .dashboard-topbar { min-height: 76px; }
+  .dashboard-shell .dashboard-topbar h1 { font-size: 18px; }
+  .dashboard-shell .dashboard-content { padding-top: 28px; }
+  .dashboard-shell .welcome-row { margin-bottom: 24px; }
+  .dashboard-shell .welcome-row h2 { font-size: 30px; }
+  .dashboard-shell .welcome-row p { font-size: 13px; }
+  .dashboard-shell :is(.primary-action, .contact-button, .secondary-action, .delete-account-button) { padding: 11px 17px; }
+  .dashboard-shell .metric-grid { gap: 12px; }
+  .dashboard-shell .metric-card { padding: 17px; grid-template-columns: minmax(0, 1fr) 30px; gap: 9px; border-radius: 20px; }
+  .dashboard-shell .metric-icon { width: 30px; height: 30px; border-radius: 10px; }
+  .dashboard-shell .metric-icon svg { width: 17px; height: 17px; }
+  .dashboard-shell .metric-card b { font-size: 32px; }
+  .dashboard-shell .metric-card > span:not(.metric-icon) { font-size: 11px; }
+  .dashboard-shell :is(.dashboard-card, .supplier-card, .order-card) { padding: 20px; border-radius: 22px; }
+  .dashboard-shell .profile-cover { margin: -20px -20px 24px; padding: 24px 20px; border-radius: 22px 22px 0 0; }
+  .dashboard-shell .profile-cover-name { font-size: 25px; }
+  .dashboard-shell .orders-filter-pills { width: 100%; }
+  .dashboard-shell .orders-filter-pills button { padding: 7px 9px; }
+  .dashboard-shell .product-modal { padding: 24px 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell button { transition: none; }
+  .dashboard-shell button:active:not(:disabled) { transform: none; }
+}
+/* Keep avatar initials and editable values independent of surrounding labels. */
+.dashboard-shell .profile-avatar > span { color: #fff; }
+.dashboard-shell :is(.profile-fields input, .profile-fields select, .profile-fields textarea, .product-modal input, .product-modal select) { font-weight: 400; letter-spacing: normal; }
+.dashboard-shell .notification-panel strong { color: var(--ios-text); }
+.dashboard-shell .notification-panel span { color: var(--ios-secondary); }
+.dashboard-shell .brand-mark { width: 120%; }
