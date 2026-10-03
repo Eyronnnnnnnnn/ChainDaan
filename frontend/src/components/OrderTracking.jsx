@@ -82,10 +82,11 @@ export function TrackingView({ number }) {
 export default function OrderTracking({ order, supplier = false }) {
   const [open, setOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [lastShared, setLastShared] = useState(null);
   const [error, setError] = useState("");
   const number = trackingNumberFor(order);
   useEffect(() => {
-    if (!sharing || order.status !== "confirmed") return;
+    if (!supplier || !sharing || order.status !== "confirmed") return;
     let active = true;
     let busy = false;
     let lastSent = 0;
@@ -95,22 +96,25 @@ export default function OrderTracking({ order, supplier = false }) {
       lastSent = Date.now();
       try {
         await request(`/api/orders/${order._id}/location`, { method: "POST", body: JSON.stringify({ latitude: coords.latitude, longitude: coords.longitude, accuracy: coords.accuracy }) });
-        if (active) setError("");
+        if (active) { setError(""); setLastShared(new Date().toLocaleTimeString()); }
       } catch (err) { if (active) { setError(err.message); setSharing(false); } }
       finally { busy = false; }
     }, (err) => { if (active) { setError(err.message || "Location unavailable."); setSharing(false); } }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
     return () => { active = false; navigator.geolocation.clearWatch(watcher); };
-  }, [sharing, order._id, order.status]);
+  }, [supplier, sharing, order._id, order.status]);
   return <div className="parcel-controls">
-    <div className="parcel-actions"><span>Tracking: <b>{number}</b></span><button type="button" onClick={() => setOpen(!open)}>{open ? "Hide tracking" : "Track parcel"}</button></div>
+    <div className="parcel-actions"><span>Tracking number: <b>{number}</b></span>{!supplier && <button type="button" onClick={() => setOpen(!open)}>{open ? "Hide tracking" : "Track order"}</button>}</div>
+    {!supplier && <p>View your supplier's delivery location and the recorded route of your order.</p>}
+    {supplier && order.status === "pending" && <p>Confirm this order to share its delivery location with the business owner.</p>}
     {supplier && order.status === "confirmed" && <>
-      <p>Share GPS from the device travelling with this parcel. Keep this page open; leaving it stops sharing.</p>
+      <p>Send the delivery location to the business owner so they can track their order. Use the device travelling with the parcel and keep this page open.</p>
+      {sharing && <p role="status">{lastShared ? `Location sent to the business owner at ${lastShared}. Sharing is on.` : "Waiting for your device's GPS location to send to the business owner..."}</p>}
       <button type="button" onClick={() => {
         if (!navigator.geolocation || !window.isSecureContext) { setError("GPS sharing requires HTTPS (or localhost) and browser location access."); return; }
-        setSharing(!sharing); setOpen(true); setError("");
+        setSharing(!sharing); setLastShared(null); setError("");
       }}>{sharing ? "Stop sharing location" : "Share delivery location"}</button>
     </>}
     {error && <p role="alert">{error}</p>}
-    {open && <TrackingView key={number} number={number} />}
+    {!supplier && open && <TrackingView key={number} number={number} />}
   </div>;
 }
