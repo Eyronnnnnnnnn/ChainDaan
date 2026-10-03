@@ -250,7 +250,19 @@ const Profile = mongoose.model("Profile", profileSchema);
 const Product = mongoose.model("Product", productSchema);
 const Conversation = mongoose.model("Conversation", conversationSchema);
 const Message = mongoose.model("Message", messageSchema);
+const trackingNumberFor = (id) => `CD-${id.toString().toUpperCase()}`;
+saleSchema.set("toJSON", { transform: (_doc, result) => {
+  result.trackingNumber = trackingNumberFor(result._id);
+  return result;
+} });
 const Sale = mongoose.model("Sale", saleSchema);
+const TrackingPoint = mongoose.model("TrackingPoint", new mongoose.Schema({
+  orderId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
+  latitude: Number,
+  longitude: Number,
+  accuracy: Number,
+  recordedAt: { type: Date, default: Date.now },
+}));
 const Feedback = mongoose.model("Feedback", feedbackSchema);
 const onlineUsers = new Map();
 
@@ -1035,6 +1047,33 @@ app.post(
     response.status(201).json(result);
   }),
 );
+app.get("/api/tracking/:number", requireAuth, asyncRoute(async (request, response) => {
+  const match = /^CD-([a-f0-9]{24})$/i.exec(request.params.number);
+  if (!match) return response.status(400).json({ error: "Invalid tracking number." });
+  const order = await Sale.findOne({ _id: match[1], $or: [
+    { buyerId: request.auth.sub }, { supplierId: request.auth.sub },
+  ] });
+  if (!order) return response.status(404).json({ error: "Tracking not found for your account." });
+  const points = await TrackingPoint.find({ orderId: order._id }).sort({ recordedAt: 1, _id: 1 }).lean();
+  response.json({ trackingNumber: trackingNumberFor(order._id), status: order.status, points });
+}));
+
+app.post("/api/orders/:id/location", requireAuth, asyncRoute(async (request, response) => {
+  const { latitude, longitude, accuracy } = request.body;
+  if (typeof latitude !== "number" || !Number.isFinite(latitude) || Math.abs(latitude) > 90 ||
+      typeof longitude !== "number" || !Number.isFinite(longitude) || Math.abs(longitude) > 180 ||
+      typeof accuracy !== "number" || !Number.isFinite(accuracy) || accuracy < 0) {
+    return response.status(400).json({ error: "A valid GPS position and accuracy are required." });
+  }
+  const order = await Sale.findOne({ _id: request.params.id, supplierId: request.auth.sub });
+  if (!order) return response.status(404).json({ error: "Order not found for your account." });
+  if (order.status !== "confirmed") return response.status(409).json({ error: "Location sharing requires a confirmed, active order." });
+  const point = await TrackingPoint.create({ orderId: order._id, latitude, longitude, accuracy });
+  const update = { trackingNumber: trackingNumberFor(order._id), point };
+  io.to(order.buyerId.toString()).to(order.supplierId.toString()).emit("trackingUpdated", update);
+  response.status(201).json(point);
+}));
+
 app.get(
   "/api/orders",
   requireAuth,

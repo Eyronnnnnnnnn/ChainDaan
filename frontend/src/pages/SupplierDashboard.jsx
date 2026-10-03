@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { CategoryScale, Chart as ChartJS, Filler, LinearScale, LineElement, PointElement, Tooltip } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { io } from "socket.io-client";
+import OrderTracking from "../components/OrderTracking.jsx";
 import "./SupplierDashboard.css";
 import "./DashboardTheme.css";
 import { getCurrentUser, logout } from "../lib/session.js";
@@ -686,6 +687,7 @@ function SupplierOrders({ orders, setOrders, onMessageBuyer }) {
                   {order.status === "cancelled" && <span className="progress-cancelled"><XIcon size={12} /> Order declined</span>}
                 </div>
 
+                <OrderTracking order={order} supplier />
                 <div className="order-card-foot">
                   <span className="order-date-note">
                     Received on {new Date(order.createdAt || order.soldAt).toLocaleDateString()} at{" "}

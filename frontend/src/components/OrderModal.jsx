@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackingNumberFor } from "../lib/tracking.js";
 import { orderApi } from "../api/client.js";
 
 export default function OrderModal({ product, supplier, currentUser = {}, onClose, onOrderPlaced }) {
@@ -74,6 +75,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
             </p>
 
             <div className="order-summary-box">
+              <div className="summary-row"><span>Tracking number:</span><b style={{ overflowWrap: "anywhere" }}>{placedOrder && trackingNumberFor(placedOrder)}</b></div>
               <div className="summary-row">
                 <span>Quantity:</span>
                 <b>{placedOrder?.quantity || quantity} units</b>
@@ -238,4 +240,3 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
     </div>
   );
 }
-

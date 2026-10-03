@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
+import OrderTracking from "../components/OrderTracking.jsx";
 import "./SupplierDashboard.css";
 import "./DashboardTheme.css";
 import { chatApi, orderApi, profileApi, request } from "../api/client.js";
@@ -770,6 +771,7 @@ function BusinessOrders({ currentUser, onOrdersCountChange, onMessageSupplier })
                   </div>
                 </div>
 
+                <OrderTracking order={order} />
                 <div className="order-card-foot">
                   <span className="order-date-note">
                     Ordered on {new Date(order.createdAt || order.soldAt).toLocaleDateString()} at{" "}

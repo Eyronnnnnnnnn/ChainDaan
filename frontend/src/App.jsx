@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TrackingView } from "./components/OrderTracking.jsx";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Login, { ForgotPassword, ResetPassword, SignIn } from "./pages/Login.jsx";
@@ -54,6 +55,7 @@ function ImageSlot({ src, alt, className = "" }) {
 function Home() {
   const [trackingNumber, setTrackingNumber] = useState("");
   const [trackingMessage, setTrackingMessage] = useState("");
+  const [activeTracking, setActiveTracking] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
   const features = [
@@ -177,7 +179,12 @@ function Home() {
               partnerships, and streamline their sourcing process through one
               secure and user-friendly platform.
             </p>
-            <form className="tracking-box" onSubmit={(event) => { event.preventDefault(); setTrackingMessage(trackingNumber.trim() ? "Your order is being tracked." : "Enter a tracking number to continue."); }}>
+            <form className="tracking-box" onSubmit={(event) => {
+              event.preventDefault(); setActiveTracking("");
+              if (!localStorage.getItem("chaindaan_token")) setTrackingMessage("Sign in to the account that placed or supplies this order to view its location.");
+              else if (!/^CD-[a-f0-9]{24}$/i.test(trackingNumber.trim())) setTrackingMessage("Enter a valid CD- tracking number from your order.");
+              else { setTrackingMessage(""); setActiveTracking(trackingNumber.trim().toUpperCase()); }
+            }}>
               <label>
                 <Icon size={19}>
                   <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
@@ -198,6 +205,7 @@ function Home() {
               </div>
               {trackingMessage && <p className="tracking-message">{trackingMessage}</p>}
             </form>
+            {activeTracking && <TrackingView key={activeTracking} number={activeTracking} />}
           </div>
           <div className="hero-visual">
             <ImageSlot src={images.hero} alt="Ilocos Norte supplier map" className="hero-image" />
