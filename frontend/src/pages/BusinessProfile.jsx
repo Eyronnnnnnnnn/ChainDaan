@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "../lib/theme.js";
 import { profileApi } from "../api/client.js";
 import { getCurrentUser, logout } from "../lib/session.js";
 import ProfilePictureUpload from "../components/ProfilePictureUpload.jsx";
@@ -21,7 +22,7 @@ export default function BusinessProfile() {
   const currentUser = getCurrentUser() || {};
   const [profile, setProfile] = useState(currentUser);
   const [status, setStatus] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useTheme();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const update = (field) => (event) => {

@@ -50,7 +50,15 @@ export const productApi = {
     body.append("price", data.price);
     body.append("stock", data.stock);
     data.images.forEach((image) => body.append("images", image));
+    if (data.gcashQr) body.append("gcashQr", data.gcashQr);
     return request("/api/products", { method: "POST", body });
+  },
+  update: (id, data) => {
+    const body = new FormData();
+    ["name", "category", "price", "stock"].forEach((key) => body.append(key, data[key]));
+    (data.images || []).forEach((image) => body.append("images", image));
+    if (data.gcashQr) body.append("gcashQr", data.gcashQr);
+    return request(`/api/products/${id}`, { method: "PATCH", body });
   },
   remove: (id) => request(`/api/products/${id}`, { method: "DELETE" }),
 };
@@ -78,11 +86,14 @@ export const orderApi = {
     const queryString = query.toString();
     return request(`/api/orders${queryString ? `?${queryString}` : ""}`);
   },
-  create: (data) =>
-    request("/api/orders", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+  create: (data) => request("/api/orders", { method: "POST", body: paymentFormData(data) }),
+  reviewPayment: (id, status, note) => request(`/api/orders/${id}/payment-review`, { method: "PATCH", body: JSON.stringify({ status, note }) }),
+  resubmitPayment: (id, data) => request(`/api/orders/${id}/payment`, { method: "POST", body: paymentFormData(data) }),
+  proof: async (id) => {
+    const response = await fetch(`${API_URL}/api/orders/${id}/payment-proof`, { headers: { Authorization: `Bearer ${localStorage.getItem("chaindaan_token")}` } });
+    if (!response.ok) throw new Error("Could not load payment proof.");
+    return response.blob();
+  },
   updateStatus: (id, status) =>
     request(`/api/orders/${id}/status`, {
       method: "PATCH",
@@ -91,3 +102,10 @@ export const orderApi = {
 };
 
 export { request };
+function paymentFormData(data) {
+  const body = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) body.append(key, value);
+  });
+  return body;
+}

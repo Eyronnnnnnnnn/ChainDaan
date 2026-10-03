@@ -13,6 +13,7 @@ import nodemailer from "nodemailer";
 import { v2 as cloudinary } from "cloudinary";
 import { Server as SocketServer } from "socket.io";
 import { env } from "./config/env.js";
+import { validatePayment, validImage } from "./payment.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -56,10 +57,8 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_request, file, callback) => {
-    callback(
-      null,
-      ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype),
-    );
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return callback(new Error("Choose a JPG, PNG or WEBP image up to 5 MB."));
+    callback(null, true);
   },
 });
 
@@ -163,6 +162,7 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
     images: { type: [String], default: [] },
+    gcashQrUrl: { type: String, default: "" },
   },
   { timestamps: true },
 );
@@ -226,6 +226,12 @@ const saleSchema = new mongoose.Schema(
     contactPhone: { type: String, trim: true },
     notes: { type: String, trim: true },
     paymentMethod: { type: String, default: "Cash on Delivery (COD)" },
+    payment: {
+      status: { type: String, enum: ["cod", "pending", "approved", "rejected"] },
+      gcashName: String, gcashPhone: String, gcashReference: String,
+      qrUrl: String, proof: { type: Buffer, select: false }, proofType: String,
+      submittedAt: Date, reviewedAt: Date, reviewNote: String,
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "completed", "cancelled"],
@@ -252,6 +258,7 @@ const Conversation = mongoose.model("Conversation", conversationSchema);
 const Message = mongoose.model("Message", messageSchema);
 const trackingNumberFor = (id) => `CD-${id.toString().toUpperCase()}`;
 saleSchema.set("toJSON", { transform: (_doc, result) => {
+  if (result.payment) delete result.payment.proof;
   result.trackingNumber = trackingNumberFor(result._id);
   return result;
 } });
@@ -804,6 +811,7 @@ app.get(
             name: product.name,
             category: product.category,
             price: product.price,
+            gcashQrUrl: product.gcashQrUrl,
             stock: product.stock,
             images: product.images,
           })),
@@ -897,7 +905,7 @@ app.post(
   "/api/products",
   requireAuth,
   uploadLimiter,
-  upload.array("images", 10),
+  upload.fields([{ name: "images", maxCount: 10 }, { name: "gcashQr", maxCount: 1 }]),
   asyncRoute(async (request, response) => {
     if (request.auth.role !== "supplier")
       return response
@@ -908,8 +916,11 @@ app.post(
       return response
         .status(400)
         .json({ error: "Product name, price, and stock are required." });
+    const qr = request.files?.gcashQr?.[0];
+    if (qr && !validImage(qr)) return response.status(400).json({ error: "Upload a valid QR image." });
+    const gcashQrUrl = qr ? await uploadToCloudinary(qr, "chaindaan/gcash-qr") : "";
     const images = await Promise.all(
-      (request.files || []).map((file) =>
+      (request.files?.images || []).map((file) =>
         uploadToCloudinary(file, "chaindaan/products"),
       ),
     );
@@ -920,6 +931,7 @@ app.post(
       stock: Number(stock),
       supplierId: request.auth.sub,
       images,
+      gcashQrUrl,
     });
     response.status(201).json(product);
   }),
@@ -927,6 +939,8 @@ app.post(
 app.patch(
   "/api/products/:id",
   requireAuth,
+  uploadLimiter,
+  upload.fields([{ name: "images", maxCount: 10 }, { name: "gcashQr", maxCount: 1 }]),
   asyncRoute(async (request, response) => {
     const product = await Product.findOne({
       _id: request.params.id,
@@ -939,6 +953,10 @@ app.patch(
         ["name", "category", "price", "stock"].includes(field),
       ),
     );
+    const qr = request.files?.gcashQr?.[0];
+    if (qr && !validImage(qr)) return response.status(400).json({ error: "Upload a valid QR image." });
+    if (qr) updates.gcashQrUrl = await uploadToCloudinary(qr, "chaindaan/gcash-qr");
+    if (request.files?.images?.length) updates.images = await Promise.all(request.files.images.map((file) => uploadToCloudinary(file, "chaindaan/products")));
     response.json(
       await Product.findByIdAndUpdate(product._id, updates, {
         new: true,
@@ -1099,6 +1117,8 @@ app.get(
 app.post(
   "/api/orders",
   requireAuth,
+  uploadLimiter,
+  upload.single("paymentProof"),
   asyncRoute(async (request, response) => {
     const {
       productId,
@@ -1114,7 +1134,7 @@ app.post(
       return response.status(400).json({ error: "Product is required." });
     }
     const numQty = Number(quantity);
-    if (!numQty || numQty < 1) {
+    if (!Number.isSafeInteger(numQty) || numQty < 1) {
       return response.status(400).json({ error: "Quantity must be at least 1." });
     }
     if (!deliveryAddress?.trim() || !deliveryTown?.trim()) {
@@ -1129,6 +1149,7 @@ app.post(
     }
 
     const total = Number(product.price || 0) * numQty;
+    const payment = validatePayment(request.body, request.file, product.gcashQrUrl);
     const order = await Sale.create({
       supplierId: product.supplierId,
       buyerId: request.auth.sub,
@@ -1140,6 +1161,7 @@ app.post(
       contactPhone: contactPhone?.trim() || "",
       notes: notes?.trim() || "",
       paymentMethod: paymentMethod?.trim() || "Cash on Delivery (COD)",
+      payment,
       status: "pending",
       soldAt: new Date(),
     });
@@ -1153,6 +1175,35 @@ app.post(
     response.status(201).json(populated);
   }),
 );
+
+async function publishPaymentOrder(id, response) {
+  const order = await Sale.findById(id).populate("productId buyerId supplierId");
+  io.to(order.buyerId._id.toString()).to(order.supplierId._id.toString()).emit("orderUpdated", order);
+  response.json(order);
+}
+app.get("/api/orders/:id/payment-proof", requireAuth, asyncRoute(async (request, response) => {
+  const order = await Sale.findOne({ _id: request.params.id, $or: [{ buyerId: request.auth.sub }, { supplierId: request.auth.sub }] }).select("+payment.proof");
+  if (!order?.payment?.proof) return response.status(404).json({ error: "Payment proof not found." });
+  response.set("Cache-Control", "private, no-store").type(order.payment.proofType).send(order.payment.proof);
+}));
+app.patch("/api/orders/:id/payment-review", requireAuth, asyncRoute(async (request, response) => {
+  const { status, note } = request.body;
+  if (!["approved", "rejected"].includes(status)) return response.status(400).json({ error: "Choose approve or reject." });
+  const reviewNote = typeof note === "string" ? note.trim().slice(0, 500) : "";
+  if (status === "rejected" && !reviewNote) return response.status(400).json({ error: "Explain why the payment was rejected." });
+  const order = await Sale.findOneAndUpdate({ _id: request.params.id, supplierId: request.auth.sub, paymentMethod: "GCash", "payment.status": "pending", status: { $nin: ["completed", "cancelled"] } },
+    { $set: { "payment.status": status, "payment.reviewNote": reviewNote, "payment.reviewedAt": new Date() } }, { new: true });
+  if (!order) return response.status(409).json({ error: "Payment is unavailable or has already been reviewed." });
+  await publishPaymentOrder(order._id, response);
+}));
+app.post("/api/orders/:id/payment", requireAuth, uploadLimiter, upload.single("paymentProof"), asyncRoute(async (request, response) => {
+  const order = await Sale.findOne({ _id: request.params.id, buyerId: request.auth.sub, paymentMethod: "GCash", "payment.status": "rejected", status: "pending" });
+  if (!order) return response.status(409).json({ error: "Only rejected payments on pending orders can be resubmitted." });
+  const payment = validatePayment({ ...request.body, paymentMethod: "GCash" }, request.file, order.payment.qrUrl);
+  const updated = await Sale.findOneAndUpdate({ _id: order._id, "payment.status": "rejected", status: "pending" }, { $set: { payment } }, { new: true });
+  if (!updated) return response.status(409).json({ error: "Payment has changed. Refresh and try again." });
+  await publishPaymentOrder(order._id, response);
+}));
 
 app.patch(
   "/api/orders/:id/status",
@@ -1182,6 +1233,9 @@ app.patch(
     }
 
     const previousStatus = order.status;
+    if (["confirmed", "completed"].includes(status) && order.paymentMethod === "GCash" && order.payment?.status !== "approved") {
+      return response.status(409).json({ error: "Approve the GCash payment before confirming or completing this order." });
+    }
     order.status = status;
     await order.save();
 
@@ -1209,12 +1263,11 @@ app.patch(
 
 app.get(
   "/api/sales",
+  requireAuth,
   asyncRoute(async (request, response) =>
     response.json(
       await Sale.find(
-        request.query.supplierId
-          ? { supplierId: request.query.supplierId }
-          : {},
+        request.auth.role === "supplier" ? { supplierId: request.auth.sub } : { buyerId: request.auth.sub },
       )
         .populate("productId buyerId")
         .sort({ soldAt: -1 }),
@@ -1223,9 +1276,8 @@ app.get(
 );
 app.post(
   "/api/sales",
-  asyncRoute(async (request, response) =>
-    response.status(201).json(await Sale.create(request.body)),
-  ),
+  requireAuth,
+  (_request, response) => response.status(410).json({ error: "Create orders through /api/orders so payment validation is applied." }),
 );
 app.use((error, _request, response, _next) => {
   console.error("Request failed:", error);
@@ -1258,9 +1310,13 @@ io.on("connection", (socket) => {
   onlineUsers.set(socket.auth.sub, connectionCount + 1);
   socket.emit("presence:init", [...onlineUsers.keys()]);
   io.emit("presence:update", { userId: socket.auth.sub, online: true });
-  socket.on("joinConversation", (conversationId) =>
-    socket.join(conversationId),
-  );
+  socket.on("joinConversation", async (conversationId) => {
+    if (!mongoose.isValidObjectId(conversationId)) return;
+    try {
+      const conversation = await Conversation.exists({ _id: conversationId, participantIds: socket.auth.sub });
+      if (conversation) socket.join(conversationId);
+    } catch { /* A failed lookup must not grant room access. */ }
+  });
   socket.on("leaveConversation", (conversationId) =>
     socket.leave(conversationId),
   );

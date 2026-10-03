@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { TrackingView } from "./components/OrderTracking.jsx";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useTheme } from "./lib/theme.js";
+import "./Theme.css";
 import "./App.css";
 import Login, { ForgotPassword, ResetPassword, SignIn } from "./pages/Login.jsx";
 import SupplierDashboard from "./pages/SupplierDashboard.jsx";
@@ -407,9 +409,17 @@ function OAuthResult() {
   return <main className="oauth-result" role="status">{user ? "Completing Facebook sign-in..." : message}</main>;
 }
 
+function ThemeControl() {
+  const [dark, setDark] = useTheme();
+  const { pathname } = useLocation();
+  useEffect(() => { document.documentElement.classList.toggle("app-dark", dark); }, [dark]);
+  return pathname.includes("dashboard") ? null : <button className="app-theme-toggle" type="button" onClick={() => setDark(!dark)} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>{dark ? "Light mode" : "Dark mode"}</button>;
+}
+
 function App() {
   return (
     <Router>
+      <ThemeControl />
       <Routes>
         <Route path="/register" element={<Login />} />
         <Route path="/login" element={<SignIn />} />

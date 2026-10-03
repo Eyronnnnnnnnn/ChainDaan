@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { trackingNumberFor } from "../lib/tracking.js";
 import { orderApi } from "../api/client.js";
+import { GCashFields } from "./PaymentDetails.jsx";
 
-export default function OrderModal({ product, supplier, currentUser = {}, onClose, onOrderPlaced }) {
+export default function OrderModal({ product, supplier, currentUser = {}, onClose, onOrderPlaced, onTrackOrder }) {
   const [quantity, setQuantity] = useState(1);
   const [deliveryTown, setDeliveryTown] = useState(currentUser.town || supplier?.town || "Laoag City");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [contactPhone, setContactPhone] = useState(currentUser.phone || "");
   const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery (COD)");
+  const [gcash, setGcash] = useState({});
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +48,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
         deliveryAddress: deliveryAddress.trim(),
         contactPhone: contactPhone.trim(),
         paymentMethod,
+        ...(paymentMethod === "GCash" ? gcash : {}),
         notes: notes.trim(),
       });
       setPlacedOrder(order);
@@ -92,8 +95,10 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
                 <span>Status:</span>
                 <span className="order-status-badge pending">⏳ Awaiting Supplier Confirmation</span>
               </div>
+              <div className="summary-row"><span>Payment:</span><b>{placedOrder?.paymentMethod === "GCash" ? "GCash — awaiting supplier review" : "Cash on Delivery"}</b></div>
             </div>
 
+            {onTrackOrder && <button className="primary-action" type="button" onClick={onTrackOrder}>Track this order</button>}
             <p className="order-notice">
               You will see real-time updates in your <strong>&quot;My Orders&quot;</strong> tab as soon as the supplier approves and confirms your order.
             </p>
@@ -167,13 +172,12 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
                 PAYMENT METHOD
                 <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
                   <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
-                  <option value="GCash / Maya upon Delivery">GCash / Maya upon Delivery</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Supplier Terms (Invoice)">Supplier Invoice Terms</option>
+                  <option value="GCash" disabled={!product.gcashQrUrl}>GCash{!product.gcashQrUrl ? " (QR not available)" : ""}</option>
                 </select>
               </label>
             </div>
 
+            {paymentMethod === "GCash" && <GCashFields qrUrl={product.gcashQrUrl} values={gcash} onChange={setGcash} />}
             {/* Delivery Details */}
             <div className="modal-fields">
               <label>

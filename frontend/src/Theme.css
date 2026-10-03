@@ -1,0 +1,44 @@
+.app-theme-toggle { position: fixed; right: 20px; bottom: 20px; z-index: 90; border: 1px solid #cad5e3; border-radius: 999px; padding: 11px 16px; background: #fff; color: #203047; box-shadow: 0 4px 20px #0002; cursor: pointer; font-size: 12px; font-weight: 600; }
+html.app-dark { color-scheme: dark; --blue: #81acff; --navy: #e8efff; --muted: #b0bdce; }
+.app-dark body { background: #10141c; color: #e8edf5; }
+.app-dark .app-theme-toggle { background: #202a3a; color: #e8edf5; border-color: #3a4961; }
+.app-dark :is(.site-shell, .auth-shell, .legal-shell, .register-page, .register-panel, .legal-main) { background: #10141c; color: #e8edf5; }
+.app-dark :is(.site-header, .auth-header, .legal-header, .auth-footer, .legal-footer, .site-shell footer) { background: #171e2a; color: #bac7db; border-color: #303b4d; }
+.app-dark :is(.site-shell, .auth-shell, .legal-shell) :is(h1, h2, h3, h4, strong, label) { color: #edf2ff; }
+.app-dark :is(.hero, .features, .products-section, .how-section, .contact-section, .stats-section) { background: #10141c; }
+.app-dark :is(.feature-card, .product-card, .tracking-box, .contact-card, .register-input-wrap, .role-switch, .legal-sections section, .social-buttons button, .social-buttons a) { background: #1c2534; border-color: #344157; color: #edf2ff; }
+.app-dark :is(.site-shell, .auth-shell, .legal-shell) :is(p, small, .register-subtitle, .terms-check, .register-footer) { color: #b7c3d6; }
+.app-dark :is(.site-shell, .auth-shell, .legal-shell) :is(input, select, textarea) { background: #141c29; color: #e8edf5; border-color: #344157; }
+.app-dark :is(input, textarea)::placeholder { color: #99a6ba; opacity: 1; }
+.app-dark .role-switch button.selected { background: #2869cd; color: #fff; }
+.app-dark .continue-divider span { background: #10141c; color: #b7c3d6; }
+.dashboard-shell :is(.tracking-order-list, .tracking-order-detail, .parcel-tracking) { background: var(--ios-surface); color: var(--ios-text); border-color: var(--ios-line); }
+.dashboard-shell :is(.tracking-order-list button, .tracking-order-list input, .parcel-empty) { background: var(--ios-inset); color: var(--ios-text); border-color: var(--ios-line); }
+.dashboard-shell .tracking-order-list button[aria-pressed="true"] { background: var(--ios-tint); border-color: var(--ios-blue); }
+.dashboard-shell :is(.parcel-controls, .tracking-order-detail > p) { color: var(--ios-secondary); border-color: var(--ios-line); }
+.dashboard-shell .parcel-controls button { background: var(--ios-tint); color: var(--ios-blue); border-color: var(--ios-line); }
+.dashboard-shell.dark-mode .parcel-state { color: #83dccc; }
+.dashboard-shell.dark-mode :is(.product-modal input, .product-modal select, .product-modal textarea, .quantity-control, .order-calc-card, .order-product-snapshot, .profile-info-item, .info-chip) { background: var(--ios-inset); color: var(--ios-text); border-color: var(--ios-line); }
+.dashboard-shell.dark-mode :is(.product-modal p, .product-modal label, .order-delivery-info, .order-date-note, .profile-info-item span, .product-table-row > span) { color: var(--ios-secondary); }
+.dashboard-shell.dark-mode :is(.modal-close, .quantity-control button, .product-table-row button) { background: var(--ios-inset); color: var(--ios-text); }
+.dashboard-shell.dark-mode :is(.order-status-badge.pending, .order-status-badge.confirmed) { background: #263b59; color: #b6d7ff; }
+.dashboard-shell.dark-mode .order-status-badge.completed { background: #183e30; color: #8fe5bb; }
+.dashboard-shell.dark-mode :is(.order-status-badge.cancelled, .form-error) { color: #ffadba; }
+html.app-dark .auth-shell :is(.role-switch, .social-buttons button, .social-buttons a) { background: #1c2534; color: #dbe6f7; border-color: #344157; }
+html.app-dark .auth-shell .role-switch button { color: #bdc9dc; }
+html.app-dark .auth-shell .role-switch button.selected { color: #fff; background: #2869cd; }
+html.app-dark :is(.auth-header, .legal-header, .site-header) a { color: #b9d1ff; }
+html.app-dark .auth-shell :is(.back-link, .forgot-password, .register-form a, .register-panel > p a, .auth-legal-links a) { color: #99bfff; }
+html.app-dark .auth-shell .register-input-wrap input { background: transparent; }
+html.app-dark .auth-shell .social-buttons :is(button, a) { color: #dbe6f7; }
+html.app-dark .auth-shell .login-role-switch { background: #1c2534; border-color: #344157; }
+html.app-dark .auth-shell .login-role-switch button { color: #bdc9dc; }
+html.app-dark .auth-shell .login-role-switch button.selected { color: #fff; background: #2869cd; }
+html.app-dark .auth-shell a[href="/forgot-password"] { color: #99bfff; }
+html.app-dark .site-shell :is(.feature-section, .feedback-form) { background: #10141c; border-color: #344157; }
+html.app-dark .site-shell :is(.feature-icon, .floating-icon) { background: #253753; color: #9fc1ff; }
+.dashboard-shell.dark-mode .btn-action.decline { background: #43232d; color: #ffb1be; border-color: #653040; }
+.dashboard-shell.dark-mode .btn-action.chat { background: var(--ios-tint); color: var(--ios-blue); }
+.dashboard-shell.dark-mode .snapshot-placeholder { background: #303949; color: #bdcfee; }
+:is(button, a, input, select, textarea):focus-visible { outline: 3px solid #579dff; outline-offset: 3px; }
+@media (max-width: 600px) { .app-theme-toggle { right: 12px; bottom: 12px; } .payment-panel { padding: 14px; } }

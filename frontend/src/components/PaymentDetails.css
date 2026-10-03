@@ -1,0 +1,14 @@
+.gcash-checkout, .payment-panel { padding: 20px; margin: 16px 0; border: 1px solid var(--ios-line, #dce4ee); border-radius: 18px; background: var(--ios-inset, #f4f7fb); color: var(--ios-text, #203047); }
+.payment-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.payment-heading h3, .payment-heading h4, .payment-heading p { margin: 0; }
+.payment-heading p, .payment-panel p, .payment-hint { font-size: 13px; line-height: 1.6; color: var(--ios-secondary, #526575); }
+.payment-brand { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #0866ed; color: #fff; font-size: 26px; font-weight: 800; }
+.payment-image { display: block; width: auto; max-width: min(100%, 280px); max-height: 320px; object-fit: contain; margin: 16px auto; border-radius: 12px; background: white; padding: 8px; }
+.gcash-qr { width: 220px; height: 220px; }
+.payment-badge { display: inline-flex; border-radius: 999px; padding: 6px 11px; font-size: 12px; font-weight: 600; background: var(--ios-tint, #edf5ff); color: var(--ios-blue, #1760b5); text-transform: capitalize; }
+.payment-badge.approved { background: #d7f5e6; color: #116440; }.payment-badge.rejected { background: #ffe4e8; color: #9c203f; }
+.payment-facts { display: grid; gap: 10px; font-size: 13px; }.payment-facts div { display: flex; justify-content: space-between; gap: 16px; }.payment-facts dt { color: var(--ios-secondary, #526575); }.payment-facts dd { margin: 0; overflow-wrap: anywhere; }
+.payment-panel label, .gcash-checkout label { display: grid; gap: 8px; margin: 14px 0; font-size: 12px; font-weight: 600; }
+.payment-panel input, .payment-panel textarea { width: 100%; min-width: 0; border: 1px solid var(--ios-line, #dce4ee); border-radius: 10px; padding: 12px; background: var(--ios-surface, white); color: var(--ios-text, #203047); }
+.payment-actions { display: flex; flex-wrap: wrap; gap: 10px; }.payment-panel button:disabled { opacity: .55; cursor: not-allowed; }
+.dark-mode .payment-badge.approved { background: #173d30; color: #84e1b7; }.dark-mode .payment-badge.rejected { background: #49222c; color: #ffadc0; }

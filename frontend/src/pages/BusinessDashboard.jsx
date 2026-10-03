@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import OrderTracking from "../components/OrderTracking.jsx";
+import TrackingDashboard from "../components/TrackingDashboard.jsx";
+import PaymentDetails from "../components/PaymentDetails.jsx";
+import { useTheme } from "../lib/theme.js";
 import "./SupplierDashboard.css";
 import "./DashboardTheme.css";
 import { chatApi, orderApi, profileApi, request } from "../api/client.js";
@@ -60,7 +63,8 @@ export default function BusinessDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ordersCount, setOrdersCount] = useState(0);
-  const [darkMode, setDarkMode] = useState(false);
+  const [trackingOrderId, setTrackingOrderId] = useState("");
+  const [darkMode, setDarkMode] = useTheme();
   const [profileSaved, setProfileSaved] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -142,7 +146,7 @@ export default function BusinessDashboard() {
           <span className="online-dot" />
         </div>
         <nav className="dashboard-nav" aria-label="Business dashboard navigation">
-          {["Find Suppliers", "Products", "My Orders", "Messages", "My Profile"].map((view) => (
+          {["Find Suppliers", "Products", "My Orders", "Track Orders", "Messages", "My Profile"].map((view) => (
             <button
               key={view}
               className={activeView === view ? "active" : ""}
@@ -153,6 +157,7 @@ export default function BusinessDashboard() {
                 {view === "Find Suppliers" && <SearchIcon size={17} />}
                 {view === "Products" && <GridIcon size={17} />}
                 {view === "My Orders" && <ShoppingBagIcon size={17} />}
+                {view === "Track Orders" && <MapPinIcon size={17} />}
                 {view === "Messages" && <MessageSquareIcon size={17} />}
                 {view === "My Profile" && <UserIcon size={17} />}
               </span>
@@ -243,6 +248,7 @@ export default function BusinessDashboard() {
             onOrder={(product) => handleOpenOrder(product, detailSupplier)}
           />
         )}
+        {activeView === "Track Orders" && <TrackingDashboard initialOrderId={trackingOrderId} />}
         {activeView === "My Orders" && (
           <BusinessOrders
             currentUser={user}
@@ -281,8 +287,14 @@ export default function BusinessDashboard() {
             setSelectedProductForOrder(null);
             setOrderModalSupplier(null);
           }}
-          onOrderPlaced={() => {
-            // Update orders count or notify
+          onOrderPlaced={(order) => {
+            setTrackingOrderId(order._id);
+            setOrdersCount((count) => count + 1);
+          }}
+          onTrackOrder={() => {
+            setSelectedProductForOrder(null);
+            setOrderModalSupplier(null);
+            setActiveView("Track Orders");
           }}
         />
       )}
@@ -771,6 +783,7 @@ function BusinessOrders({ currentUser, onOrdersCountChange, onMessageSupplier })
                   </div>
                 </div>
 
+                <PaymentDetails order={order} onUpdated={(updated) => setOrders((current) => current.map((item) => item._id === updated._id ? updated : item))} />
                 <OrderTracking order={order} />
                 <div className="order-card-foot">
                   <span className="order-date-note">

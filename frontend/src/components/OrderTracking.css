@@ -6,5 +6,17 @@
 .parcel-tracking { margin-top: 14px; padding: 16px; border-radius: 12px; background: #f5f8fa; text-align: left; color: #263a4a; min-width: 0; }
 .parcel-map { height: 340px; width: 100%; border-radius: 10px; isolation: isolate; z-index: 0; }
 .parcel-state { font-weight: 700; color: #12665e; }
+.tracking-workspace { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.tracking-order-list, .tracking-order-detail { background: #fff; border: 1px solid #e4e9ed; border-radius: 18px; padding: 20px; min-width: 0; }
+.tracking-order-list { display: grid; gap: 12px; }
+.tracking-order-list label { font-weight: 600; font-size: 14px; }
+.tracking-order-list input { min-width: 0; width: 100%; padding: 12px; border: 1px solid #b7c9d3; border-radius: 9px; }
+.tracking-order-list button { display: grid; gap: 6px; text-align: left; border: 1px solid #e4e9ed; background: #f8fafb; border-radius: 10px; padding: 14px; cursor: pointer; color: #263a4a; }
+.tracking-order-list button[aria-pressed="true"] { background: #e6f5f1; border-color: #168a83; }
+.tracking-order-list span { font-size: 11px; overflow-wrap: anywhere; }
+.tracking-order-list small { text-transform: capitalize; }
+.tracking-order-detail > p { font-size: 13px; color: #526575; }
+.tracking-order-detail .parcel-map { height: 440px; }
+@media (max-width: 850px) { .tracking-workspace { grid-template-columns: 1fr; } .tracking-order-detail .parcel-map { height: 320px; } }
 .parcel-empty { padding: 28px 16px; border: 1px dashed #b7c9d3; border-radius: 10px; font-size: 14px; }
 @media (max-width: 600px) { .parcel-controls { padding: 14px; } .parcel-tracking { padding: 10px; } .parcel-map { height: 280px; } }

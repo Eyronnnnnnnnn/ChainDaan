@@ -3,6 +3,9 @@ import { CategoryScale, Chart as ChartJS, Filler, LinearScale, LineElement, Poin
 import { Line } from "react-chartjs-2";
 import { io } from "socket.io-client";
 import OrderTracking from "../components/OrderTracking.jsx";
+import TrackingDashboard from "../components/TrackingDashboard.jsx";
+import PaymentDetails, { ImagePreview } from "../components/PaymentDetails.jsx";
+import { useTheme } from "../lib/theme.js";
 import "./SupplierDashboard.css";
 import "./DashboardTheme.css";
 import { getCurrentUser, logout } from "../lib/session.js";
@@ -71,6 +74,8 @@ export default function SupplierDashboard() {
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [message, setMessage] = useState("");
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [productSaving, setProductSaving] = useState(false);
+  const [productError, setProductError] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
   const [productForm, setProductForm] = useState({
     name: "",
@@ -80,7 +85,7 @@ export default function SupplierDashboard() {
     images: [],
   });
   const [productSearch, setProductSearch] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -89,9 +94,9 @@ export default function SupplierDashboard() {
   useEffect(() => {
     productApi
       .list()
-      .then(setProducts)
+      .then((items) => setProducts(items.filter((item) => idValue(item.supplierId) === user._id)))
       .catch(() => setProducts([]));
-  }, []);
+  }, [user._id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,10 +188,14 @@ export default function SupplierDashboard() {
 
   async function addProduct(event) {
     event.preventDefault();
-    const product = await productApi.create(productForm);
-    setProducts((current) => [...current, product]);
-    setProductForm({ name: "", category: "Food & Grain", price: "", stock: "", images: [] });
-    setShowAddProduct(false);
+    setProductSaving(true); setProductError("");
+    try {
+      const product = productForm._id ? await productApi.update(productForm._id, productForm) : await productApi.create(productForm);
+      setProducts((current) => productForm._id ? current.map((item) => item._id === product._id ? product : item) : [...current, product]);
+      setProductForm({ name: "", category: "Food & Grain", price: "", stock: "", images: [] });
+      setShowAddProduct(false);
+    } catch (err) { setProductError(err.message); }
+    finally { setProductSaving(false); }
   }
 
   async function sendMessage(event) {
@@ -258,7 +267,7 @@ export default function SupplierDashboard() {
           <span className="online-dot" />
         </div>
         <nav className="dashboard-nav" aria-label="Supplier dashboard navigation">
-          {["Overview", "My Products", "Incoming Orders", "Messages", "Sales Overview", "My Profile"].map(
+          {["Overview", "My Products", "Incoming Orders", "Delivery Location", "Messages", "Sales Overview", "My Profile"].map(
             (view) => (
               <button
                 key={view}
@@ -270,6 +279,7 @@ export default function SupplierDashboard() {
                   {view === "Overview" && <HomeIcon size={17} />}
                   {view === "My Products" && <GridIcon size={17} />}
                   {view === "Incoming Orders" && <ShoppingBagIcon size={17} />}
+                  {view === "Delivery Location" && <MapPinIcon size={17} />}
                   {view === "Messages" && <MessageSquareIcon size={17} />}
                   {view === "Sales Overview" && <TrendingUpIcon size={17} />}
                   {view === "My Profile" && <UserIcon size={17} />}
@@ -345,6 +355,7 @@ export default function SupplierDashboard() {
         )}
         {activeView === "My Products" && (
           <Products
+            onEdit={(product) => { setProductForm({ ...product, images: [], gcashQr: null }); setProductError(""); setShowAddProduct(true); }}
             products={products}
             setProducts={setProducts}
             setShowAddProduct={setShowAddProduct}
@@ -352,6 +363,7 @@ export default function SupplierDashboard() {
             setProductSearch={setProductSearch}
           />
         )}
+        {activeView === "Delivery Location" && <TrackingDashboard supplier />}
         {activeView === "Incoming Orders" && (
           <SupplierOrders
             orders={orders}
@@ -388,7 +400,9 @@ export default function SupplierDashboard() {
           productForm={productForm}
           setProductForm={setProductForm}
           addProduct={addProduct}
-          close={() => setShowAddProduct(false)}
+          saving={productSaving}
+          error={productError}
+          close={() => { if (productSaving) return; setShowAddProduct(false); setProductError(""); setProductForm({ name: "", category: "Food & Grain", price: "", stock: "", images: [] }); }}
         />
       )}
     </main>
@@ -687,6 +701,7 @@ function SupplierOrders({ orders, setOrders, onMessageBuyer }) {
                   {order.status === "cancelled" && <span className="progress-cancelled"><XIcon size={12} /> Order declined</span>}
                 </div>
 
+                <PaymentDetails order={order} supplier onUpdated={(updated) => setOrders((current) => current.map((item) => item._id === updated._id ? updated : item))} />
                 <OrderTracking order={order} supplier />
                 <div className="order-card-foot">
                   <span className="order-date-note">
@@ -703,7 +718,8 @@ function SupplierOrders({ orders, setOrders, onMessageBuyer }) {
                         <button
                           className="btn-action confirm"
                           onClick={() => updateStatus(order._id, "confirmed")}
-                          disabled={isProcessing}
+                          disabled={isProcessing || (order.paymentMethod === "GCash" && order.payment?.status !== "approved")}
+                          title={order.paymentMethod === "GCash" && order.payment?.status !== "approved" ? "Approve the GCash payment first" : undefined}
                           type="button"
                           style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
                         >
@@ -776,6 +792,7 @@ function ProductRow({ product }) {
 }
 
 function Products({
+  onEdit,
   products,
   setProducts,
   setShowAddProduct,
@@ -840,17 +857,14 @@ function Products({
             <span className={product.stock < 20 ? "low-stock" : "stock-ok"}>
               {product.stock} units
             </span>
-            <button
-              aria-label={`Delete ${product.name}`}
-              onClick={() =>
-                setProducts((current) =>
-                  current.filter((item) => (item.id || item._id) !== (product.id || product._id))
-                )
-              }
-              type="button"
-            >
-              <XIcon size={14} />
-            </button>
+            <div className="payment-actions">
+              <button type="button" aria-label={`Edit ${product.name}`} onClick={() => onEdit(product)}><EditIcon size={14} /></button>
+              <button type="button" aria-label={`Delete ${product.name}`} onClick={async () => {
+                if (!window.confirm(`Delete ${product.name}?`)) return;
+                try { await productApi.remove(product._id); setProducts((current) => current.filter((item) => item._id !== product._id)); }
+                catch (err) { window.alert(err.message); }
+              }}><XIcon size={14} /></button>
+            </div>
           </div>
         ))}
       </section>
@@ -1525,15 +1539,15 @@ function Profile({ user, onUserUpdated, profileSaved, setProfileSaved }) {
   );
 }
 
-function AddProduct({ productForm, setProductForm, addProduct, close }) {
+function AddProduct({ productForm, setProductForm, addProduct, close, saving, error }) {
   return (
     <div className="modal-backdrop">
       <form className="product-modal" onSubmit={addProduct}>
         <button className="modal-close" onClick={close} type="button">
           ×
         </button>
-        <p className="dashboard-kicker">NEW LISTING</p>
-        <h2>Add a product</h2>
+        <p className="dashboard-kicker">{productForm._id ? "EDIT LISTING" : "NEW LISTING"}</p>
+        <h2>{productForm._id ? "Edit product" : "Add a product"}</h2>
         <p>Give businesses the details they need to place an order.</p>
         <label>
           PRODUCT NAME
@@ -1567,6 +1581,7 @@ function AddProduct({ productForm, setProductForm, addProduct, close }) {
               required
               type="number"
               min="1"
+              step="0.01"
               value={productForm.price}
               onChange={(event) =>
                 setProductForm({ ...productForm, price: event.target.value })
@@ -1603,8 +1618,21 @@ function AddProduct({ productForm, setProductForm, addProduct, close }) {
           />
           <small>Up to 10 images, 5 MB each.</small>
         </label>
-        <button className="primary-action modal-submit" type="submit">
-          Publish product
+        <section className="gcash-checkout">
+          <h3>GCash QR code</h3>
+          <p>Save a QR code for this product. Buyers will see it when paying with GCash. Without a QR code, this product accepts Cash on Delivery only.</p>
+          <label>Upload GCash QR<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.setCustomValidity(file && file.size > 5 * 1024 * 1024 ? "Choose an image up to 5 MB." : "");
+            event.target.reportValidity();
+            setProductForm({ ...productForm, gcashQr: file || null });
+          }} /></label>
+          <ImagePreview file={productForm.gcashQr} savedUrl={productForm.gcashQrUrl} alt="Product GCash QR code" />
+          <small>JPG, PNG or WEBP, up to 5 MB. Leave unchanged to keep the saved QR code.</small>
+        </section>
+        {error && <p className="form-error" role="alert">{error}</p>}
+        <button className="primary-action modal-submit" type="submit" disabled={saving}>
+          {saving ? "Saving..." : productForm._id ? "Save product" : "Publish product"}
         </button>
       </form>
     </div>
