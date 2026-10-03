@@ -412,8 +412,10 @@ function OAuthResult() {
 function ThemeControl() {
   const [dark, setDark] = useTheme();
   const { pathname } = useLocation();
-  useEffect(() => { document.documentElement.classList.toggle("app-dark", dark); }, [dark]);
-  return pathname.includes("dashboard") ? null : <button className="app-theme-toggle" type="button" onClick={() => setDark(!dark)} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>{dark ? "Light mode" : "Dark mode"}</button>;
+  const dashboard = pathname.includes("dashboard");
+  const home = pathname === "/";
+  useEffect(() => { document.documentElement.classList.toggle("app-dark", dark && !home); }, [dark, home]);
+  return dashboard || home ? null : <button className="app-theme-toggle" type="button" onClick={() => setDark(!dark)} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>{dark ? "Light mode" : "Dark mode"}</button>;
 }
 
 function App() {
