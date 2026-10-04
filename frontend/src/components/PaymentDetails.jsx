@@ -237,7 +237,7 @@ export default function PaymentDetails({ order, supplier = false, onUpdated }) {
                 )
               }
             >
-              Approve payment
+              Approve payments
             </button>
             <button
               type="button"
