@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { trackingNumberFor } from "../lib/tracking.js";
 import { orderApi } from "../api/client.js";
 import { GCashFields } from "./PaymentDetails.jsx";
 
 export default function OrderModal({ product, supplier, currentUser = {}, onClose, onOrderPlaced, onTrackOrder }) {
   const [quantity, setQuantity] = useState(1);
-  const [deliveryTown, setDeliveryTown] = useState(currentUser.town || supplier?.town || "Laoag City");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryTown, setDeliveryTown] = useState(currentUser.town || "");
+  const [deliveryAddress, setDeliveryAddress] = useState(currentUser.deliveryInfo || "");
   const [contactPhone, setContactPhone] = useState(currentUser.phone || "");
   const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery (COD)");
   const [gcash, setGcash] = useState({});
@@ -16,15 +16,39 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
   const [success, setSuccess] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
 
+  const dialogRef = useRef(null);
+  const submittingRef = useRef(false);
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  useEffect(() => {
+    if (!product) return;
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
+    const handleKey = (event) => {
+      if (event.key === "Escape" && !submittingRef.current) closeRef.current();
+      if (event.key !== "Tab") return;
+      const elements = [...dialogRef.current.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]')].filter((element) => element.getClientRects().length);
+      const first = elements[0], last = elements.at(-1);
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", handleKey); previousFocus?.focus(); };
+  }, [product]);
+
   if (!product) return null;
 
   const unitPrice = Number(product.price || 0);
-  const totalAmount = unitPrice * quantity;
+  const totalAmount = Math.round(unitPrice * quantity * 100) / 100;
   const supplierName = supplier?.name || product.supplier || "Supplier";
-  const maxStock = product.stock !== undefined ? product.stock : 9999;
+  const maxStock = Math.max(0, Math.floor(Number(product.stock) || 0));
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (submittingRef.current) return;
     if (!deliveryAddress.trim()) {
       setError("Please provide a complete delivery address.");
       return;
@@ -33,12 +57,13 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
       setError("Please specify the delivery municipality.");
       return;
     }
-    if (quantity < 1) {
-      setError("Quantity must be at least 1.");
+    if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > maxStock) {
+      setError(maxStock < 1 ? "This product is out of stock." : `Choose a whole quantity between 1 and ${maxStock}.`);
       return;
     }
 
     setError("");
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       const order = await orderApi.create({
@@ -57,14 +82,15 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
     } catch (err) {
       setError(err.message || "Failed to place order. Please try again.");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="product-modal order-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} type="button" aria-label="Close modal">
+    <div className="modal-backdrop" onClick={() => { if (!submittingRef.current) onClose(); }}>
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={success ? "Order submitted" : "Place an order"} className="product-modal order-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" disabled={submitting} onClick={onClose} type="button" aria-label="Close modal">
           ×
         </button>
 
@@ -147,21 +173,26 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity <= 1}
+                    aria-label="Decrease quantity" disabled={submitting || quantity <= 1}
                   >
                     −
                   </button>
                   <input
                     type="number"
                     min="1"
-                    max={maxStock > 0 ? maxStock : undefined}
+                    max={maxStock}
+                    step="1"
+                    aria-label="Quantity"
+                    disabled={submitting || maxStock < 1}
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
                     required
                   />
                   <button
                     type="button"
-                    onClick={() => setQuantity((q) => (maxStock > 0 ? Math.min(maxStock, q + 1) : q + 1))}
+                    aria-label="Increase quantity"
+                    disabled={submitting || quantity >= maxStock}
+                    onClick={() => setQuantity((q) => Math.min(maxStock, Number(q) + 1))}
                   >
                     +
                   </button>
@@ -170,7 +201,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
 
               <label>
                 PAYMENT METHOD
-                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                <select value={paymentMethod} disabled={submitting} onChange={(e) => { setPaymentMethod(e.target.value); setGcash({}); setError(""); }}>
                   <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
                   <option value="GCash" disabled={!product.gcashQrUrl}>GCash{!product.gcashQrUrl ? " (QR not available)" : ""}</option>
                 </select>
@@ -233,9 +264,10 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
               </div>
             </div>
 
+            {maxStock < 1 && <p className="form-error" role="alert">This product is out of stock.</p>}
             {error && <p className="form-error" role="alert">{error}</p>}
 
-            <button className="primary-action modal-submit" type="submit" disabled={submitting}>
+            <button className="primary-action modal-submit" type="submit" disabled={submitting || maxStock < 1}>
               {submitting ? "Submitting Order..." : `Confirm & Place Order (₱${totalAmount.toLocaleString()})`}
             </button>
           </form>

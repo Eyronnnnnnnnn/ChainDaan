@@ -5,9 +5,9 @@ import { MailIcon, MapPinIcon, PackageIcon, PhoneIcon, StoreIcon, UserIcon } fro
 import { request } from "../api/client.js";
 
 const benefits = [
-  "Access 500+ verified local suppliers",
-  "Secure & transparent transactions",
-  "Real-time order tracking",
+  "Discover suppliers in Ilocos Norte",
+  "Manage your orders in one place",
+  "Stay connected with local partners",
   "Free to join for all businesses",
 ];
 
@@ -67,22 +67,19 @@ function AuthFooter() {
   );
 }
 
-function Field({ label, placeholder, type = "text", icon, name, value, onChange }) {
-  return (
-    <label className="register-field">
-      <span>{label} *</span>
-      <div className="register-input-wrap">
-        {icon && <span className="field-icon">{icon}</span>}
-        <input name={name} type={type} placeholder={placeholder} value={value} onChange={onChange} required />
-        {type === "password" && <span className="field-icon" aria-hidden="true">●</span>}
-      </div>
-    </label>
-  );
+function Field({ label, placeholder, type = "text", icon, name, value, onChange, autoComplete, minLength }) {
+  const [visible, setVisible] = useState(false);
+  return <label className="register-field"><span>{label} <span aria-hidden="true">*</span></span>
+    <div className="register-input-wrap">
+      {icon && <span className="field-icon" aria-hidden="true">{icon}</span>}
+      <input name={name} type={type === "password" && visible ? "text" : type} placeholder={placeholder} value={value} onChange={onChange} autoComplete={autoComplete || ({ fullName: "name", name: "organization", email: "email", phone: "tel", town: "address-level2", confirmPassword: "new-password" }[name])} minLength={minLength} required />
+      {type === "password" && <button className="password-toggle" type="button" aria-label={(visible ? "Hide " : "Show ") + label.toLowerCase()} aria-pressed={visible} onClick={() => setVisible(!visible)}>{visible ? "Hide" : "Show"}</button>}
+    </div></label>;
 }
 
 export default function Login() {
   const navigate = useNavigate();
-  const [role, setRole] = useState("business");
+  const [role, setRole] = useState(() => new URLSearchParams(window.location.search).get("role") === "supplier" ? "supplier" : "business");
   const [form, setForm] = useState({ fullName: "", name: "", email: "", phone: "", town: "", category: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -90,6 +87,7 @@ export default function Login() {
   const update = (event) => { setForm({ ...form, [event.target.name]: event.target.value }); setError(""); };
   async function register(event) {
     event.preventDefault();
+    if (form.password !== form.confirmPassword) { setError("Passwords do not match. Please re-enter your confirmation."); return; }
     setSaving(true);
     setError("");
     try {
@@ -99,7 +97,7 @@ export default function Login() {
       });
       localStorage.setItem("chaindaan_token", data.token);
       localStorage.setItem("chaindaan_user", JSON.stringify(data.user));
-      navigate(role === "business" ? "/business-dashboard" : "/supplier-dashboard");
+      navigate(data.user.role === "business" ? "/business-dashboard" : "/supplier-dashboard");
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
@@ -113,9 +111,7 @@ export default function Login() {
       <AuthHeader />
       <main className="register-page">
       <section className="register-intro">
-        <a className="register-mark" href="/" aria-label="Chain Daan home">
-          <img src="/images/logo.png" alt="Chain Daan" />
-        </a>
+
         <div className="intro-copy">
           <h1>
             Join the <strong>Chain Daan</strong>
@@ -132,31 +128,31 @@ export default function Login() {
             ))}
           </ul>
         </div>
-        <div className="register-mascot" aria-label="Chain Daan business partners" />
+
       </section>
 
       <section className="register-panel">
-        <a className="back-link" href="/">← &nbsp;Back to Home</a>
+
         <h2>Create Account</h2>
-        <p className="register-subtitle">Join Chain Daan — it&apos;s free!</p>
-        <div className="role-switch" role="tablist" aria-label="Account type">
-          <button className={isBusiness ? "selected" : ""} onClick={() => setRole("business")} type="button">
+        <p className="register-subtitle">Choose your account type to get started. All fields are required.</p>
+        <div className="role-switch" role="group" aria-label="Account type">
+          <button className={isBusiness ? "selected" : ""} aria-pressed={role === "business"} disabled={saving} onClick={() => { setRole("business"); setError(""); }} type="button">
             <UserIcon size={15} /> I&apos;m a Business
           </button>
-          <button className={!isBusiness ? "selected" : ""} onClick={() => setRole("supplier")} type="button">
+          <button className={!isBusiness ? "selected" : ""} aria-pressed={role === "supplier"} disabled={saving} onClick={() => { setRole("supplier"); setError(""); }} type="button">
             <StoreIcon size={15} /> I&apos;m a Supplier
           </button>
         </div>
         <form className="register-form" onSubmit={register}>
           <div className="field-grid">
-            <Field name="fullName" value={form.fullName} onChange={update} label="FULL NAME" placeholder="Juan dela Cruz" />
-            <Field name="name" value={form.name} onChange={update} label={`${isBusiness ? "BUSINESS" : "SUPPLIER"} NAME`} placeholder="My Business Name" />
-            <Field name="email" value={form.email} onChange={update} label="EMAIL ADDRESS" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
-            <Field name="phone" value={form.phone} onChange={update} label="PHONE NUMBER" placeholder="09XX-XXX-XXXX" type="tel" icon={<PhoneIcon size={14} />} />
-            <Field name="town" value={form.town} onChange={update} label="MUNICIPALITY" placeholder="Select municipality..." icon={<MapPinIcon size={14} />} />
-            {!isBusiness && <Field name="category" value={form.category} onChange={update} label="PRODUCT CATEGORY" placeholder="Select category..." icon={<PackageIcon size={14} />} />}
-            <Field name="password" value={form.password} onChange={update} label="PASSWORD" placeholder="Min. 8 characters" type="password" icon={<UserIcon size={14} />} />
-            <Field name="confirmPassword" value={form.confirmPassword} onChange={update} label="CONFIRM PASSWORD" placeholder="Re-enter password" type="password" icon={<UserIcon size={14} />} />
+            <Field name="fullName" value={form.fullName} onChange={update} label="Full name" placeholder="Juan dela Cruz" />
+            <Field name="name" value={form.name} onChange={update} label={`${isBusiness ? "Business" : "Supplier"} name`} placeholder="My Business Name" />
+            <Field name="email" value={form.email} onChange={update} label="Email address" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
+            <Field name="phone" value={form.phone} onChange={update} label="Phone number" placeholder="09XX-XXX-XXXX" type="tel" icon={<PhoneIcon size={14} />} />
+            <Field name="town" value={form.town} onChange={update} label="City or municipality" placeholder="e.g. Laoag City" icon={<MapPinIcon size={14} />} />
+            {!isBusiness && <Field name="category" value={form.category} onChange={update} label="Product category" placeholder="e.g. Food and beverages" icon={<PackageIcon size={14} />} />}
+            <Field name="password" value={form.password} onChange={update} label="Password" placeholder="At least 8 characters" type="password" minLength={8} autoComplete="new-password" icon={<UserIcon size={14} />} />
+            <Field name="confirmPassword" value={form.confirmPassword} onChange={update} label="Confirm password" placeholder="Re-enter password" type="password" icon={<UserIcon size={14} />} />
           </div>
           <label className="terms-check">
             <input type="checkbox" required />
@@ -195,7 +191,7 @@ export function SignIn() {
       });
       localStorage.setItem("chaindaan_token", data.token);
       localStorage.setItem("chaindaan_user", JSON.stringify(data.user));
-      navigate(role === "business" ? "/business-dashboard" : "/supplier-dashboard");
+      navigate(data.user.role === "business" ? "/business-dashboard" : "/supplier-dashboard");
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
@@ -208,9 +204,7 @@ export function SignIn() {
       <AuthHeader />
       <main className="register-page login-page">
       <section className="register-intro login-intro">
-        <a className="register-mark" href="/" aria-label="Chain Daan home">
-          <img src="/images/logo.png" alt="Chain Daan" />
-        </a>
+
         <div className="intro-copy">
           <h1>
             Your gateway to
@@ -219,30 +213,25 @@ export function SignIn() {
             <br />
             best local suppliers.
           </h1>
-          <p>Sign in to access your dashboard, manage orders, and connect with hundreds of verified suppliers.</p>
-          <div className="login-stats">
-            <div><b>500+</b><span>Businesses</span></div>
-            <div><b>1000+</b><span>Products</span></div>
-            <div><b>20+</b><span>Municipalities</span></div>
-            <div><b>100%</b><span>Secure</span></div>
-          </div>
+          <p>Sign in to access your dashboard, manage orders, and connect with local suppliers.</p>
+
         </div>
-        
+
       </section>
 
       <section className="register-panel login-panel">
-        <a className="back-link" href="/">← &nbsp;Back to Home</a>
+
         <h2>Welcome back!</h2>
         <p className="register-subtitle">Sign in to your Chain Daan account</p>
-        <div className="login-role-switch" role="tablist" aria-label="Sign in as">
-          <button className={role === "business" ? "selected" : ""} onClick={() => setRole("business")} type="button">Business owner</button>
-          <button className={role === "supplier" ? "selected" : ""} onClick={() => setRole("supplier")} type="button">Supplier</button>
+        <div className="login-role-switch" role="group" aria-label="Sign in as">
+          <button className={role === "business" ? "selected" : ""} aria-pressed={role === "business"} disabled={saving} onClick={() => { setRole("business"); setError(""); }} type="button">Business owner</button>
+          <button className={role === "supplier" ? "selected" : ""} aria-pressed={role === "supplier"} disabled={saving} onClick={() => { setRole("supplier"); setError(""); }} type="button">Supplier</button>
         </div>
         <form className="login-form" onSubmit={signIn}>
-          <Field name="email" value={form.email} onChange={update} label="EMAIL ADDRESS" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
-          <Field name="password" value={form.password} onChange={update} label="PASSWORD" placeholder="••••••••" type="password" icon={<UserIcon size={14} />} />
+          <Field name="email" value={form.email} onChange={update} label="Email address" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
+          <Field name="password" value={form.password} onChange={update} label="Password" placeholder="Enter your password" type="password" autoComplete="current-password" icon={<UserIcon size={14} />} />
           <div className="login-options">
-            <label><input type="checkbox" /> Remember me</label>
+
             <a href="/forgot-password">Forgot password?</a>
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
@@ -277,7 +266,7 @@ export function ForgotPassword() {
   }
   return <PasswordRecovery title="Reset your password" subtitle="Enter your email and we’ll send you a reset link.">
     <form className="login-form" onSubmit={submit}>
-      <Field name="email" value={email} onChange={(event) => setEmail(event.target.value)} label="EMAIL ADDRESS" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
+      <Field name="email" value={email} onChange={(event) => setEmail(event.target.value)} label="Email address" placeholder="you@business.com" type="email" icon={<MailIcon size={14} />} />
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p className="form-success" role="status">{message}</p>}
       <button className="sign-in-button" type="submit" disabled={saving}>{saving ? "Sending..." : "Send reset link"}</button>
@@ -306,7 +295,7 @@ export function ResetPassword() {
   }
   return <PasswordRecovery title="Choose a new password" subtitle="Your new password must have at least 8 characters.">
     <form className="login-form" onSubmit={submit}>
-      <Field name="password" value={form.password} onChange={update} label="NEW PASSWORD" placeholder="Min. 8 characters" type="password" icon={<UserIcon size={14} />} />
+      <Field name="password" value={form.password} onChange={update} label="NEW PASSWORD" placeholder="At least 8 characters" type="password" minLength={8} autoComplete="new-password" icon={<UserIcon size={14} />} />
       <Field name="confirmPassword" value={form.confirmPassword} onChange={update} label="CONFIRM NEW PASSWORD" placeholder="Re-enter password" type="password" icon={<UserIcon size={14} />} />
       {!token && <p className="form-error" role="alert">This password reset link is invalid.</p>}
       {error && <p className="form-error" role="alert">{error}</p>}

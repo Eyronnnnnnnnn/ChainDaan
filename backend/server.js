@@ -14,6 +14,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { Server as SocketServer } from "socket.io";
 import { env } from "./config/env.js";
 import { validatePayment, validImage } from "./payment.js";
+import { changeOrderStatus } from "./order-status.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -279,6 +280,8 @@ const asyncRoute = (handler) => (request, response, next) =>
 const publicProfile = (profile) => {
   const data = profile.toObject ? profile.toObject() : { ...profile };
   delete data.passwordHash;
+  delete data.passwordResetTokenHash;
+  delete data.passwordResetExpiresAt;
   return data;
 };
 
@@ -369,6 +372,7 @@ function oauthFailure(response, message) {
 }
 
 function getTokenProfileFromToken(token) {
+  if (typeof token !== "string") return null;
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return null;
   const expectedSignature = crypto
@@ -400,7 +404,7 @@ function getTokenProfile(request) {
 
 const requireAuth = asyncRoute(async (request, response, next) => {
   const tokenProfile = getTokenProfile(request);
-  if (!tokenProfile)
+  if (!tokenProfile || !(await Profile.exists({ _id: tokenProfile.sub, role: tokenProfile.role })))
     return response.status(401).json({ error: "Authentication required." });
   request.auth = tokenProfile;
   return next();
@@ -895,8 +899,8 @@ app.get(
   "/api/products",
   asyncRoute(async (request, response) => {
     const filter = {};
-    if (request.query.search)
-      filter.name = new RegExp(request.query.search, "i");
+    if (typeof request.query.search === "string")
+      filter.name = new RegExp(request.query.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
     if (request.query.category) filter.category = request.query.category;
     response.json(await Product.find(filter).populate("supplierId"));
   }),
@@ -1120,6 +1124,7 @@ app.post(
   uploadLimiter,
   upload.single("paymentProof"),
   asyncRoute(async (request, response) => {
+    if (request.auth.role !== "business") return response.status(403).json({ error: "Only businesses can place orders." });
     const {
       productId,
       quantity,
@@ -1148,7 +1153,8 @@ app.post(
       return response.status(404).json({ error: "Product not found." });
     }
 
-    const total = Number(product.price || 0) * numQty;
+    if (numQty > product.stock) return response.status(409).json({ error: "Requested quantity exceeds available stock." });
+    const total = Math.round(Number(product.price || 0) * numQty * 100) / 100;
     const payment = validatePayment(request.body, request.file, product.gcashQrUrl);
     const order = await Sale.create({
       supplierId: product.supplierId,
@@ -1209,45 +1215,10 @@ app.patch(
   "/api/orders/:id/status",
   requireAuth,
   asyncRoute(async (request, response) => {
-    const { status } = request.body;
-    if (!["pending", "confirmed", "completed", "cancelled"].includes(status)) {
-      return response.status(400).json({ error: "Invalid order status." });
-    }
-
-    const order = await Sale.findById(request.params.id);
-    if (!order) {
-      return response.status(404).json({ error: "Order not found." });
-    }
-
-    const isSupplier = order.supplierId.toString() === request.auth.sub;
-    const isBuyer = order.buyerId.toString() === request.auth.sub;
-
-    if (!isSupplier && !isBuyer) {
-      return response.status(403).json({ error: "Unauthorized access to this order." });
-    }
-
-    if (isBuyer && !isSupplier && status !== "cancelled") {
-      return response
-        .status(403)
-        .json({ error: "Only suppliers can confirm or complete orders." });
-    }
-
-    const previousStatus = order.status;
-    if (["confirmed", "completed"].includes(status) && order.paymentMethod === "GCash" && order.payment?.status !== "approved") {
-      return response.status(409).json({ error: "Approve the GCash payment before confirming or completing this order." });
-    }
-    order.status = status;
-    await order.save();
-
-    if (status === "confirmed" && previousStatus !== "confirmed") {
-      await Product.findByIdAndUpdate(order.productId, {
-        $inc: { stock: -order.quantity },
-      });
-    } else if (previousStatus === "confirmed" && status === "cancelled") {
-      await Product.findByIdAndUpdate(order.productId, {
-        $inc: { stock: order.quantity },
-      });
-    }
+    const order = await changeOrderStatus({
+      connection: mongoose.connection, Sale, Product,
+      orderId: request.params.id, actorId: request.auth.sub, status: request.body.status,
+    });
 
     const populated = await Sale.findById(order._id)
       .populate("productId")
@@ -1296,12 +1267,17 @@ if (!mongoUri) {
   process.exit(1);
 }
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token || "";
   const profile = getTokenProfileFromToken(token);
   if (!profile) return next(new Error("Authentication required."));
-  socket.auth = profile;
-  next();
+  try {
+    if (!(await Profile.exists({ _id: profile.sub, role: profile.role }))) return next(new Error("Authentication required."));
+    socket.auth = profile;
+    next();
+  } catch {
+    next(new Error("Unable to verify your account. Please reconnect."));
+  }
 });
 
 io.on("connection", (socket) => {
@@ -1317,23 +1293,31 @@ io.on("connection", (socket) => {
       if (conversation) socket.join(conversationId);
     } catch { /* A failed lookup must not grant room access. */ }
   });
-  socket.on("leaveConversation", (conversationId) =>
-    socket.leave(conversationId),
-  );
-  socket.on("typing", ({ conversationId }) => {
+  socket.on("leaveConversation", (conversationId) => {
+    if (typeof conversationId === "string" && conversationId !== socket.auth.sub) socket.leave(conversationId);
+  });
+  socket.on("typing", (payload) => {
+    const conversationId = payload?.conversationId;
+    if (!socket.rooms.has(conversationId)) return;
     socket.to(conversationId).emit("userTyping", {
       conversationId,
       userId: socket.auth.sub,
     });
   });
-  socket.on("stopTyping", ({ conversationId }) => {
+  socket.on("stopTyping", (payload) => {
+    const conversationId = payload?.conversationId;
+    if (!socket.rooms.has(conversationId)) return;
     socket.to(conversationId).emit("userStopTyping", {
       conversationId,
       userId: socket.auth.sub,
     });
   });
-  socket.on("markSeen", async ({ conversationId }) => {
+  socket.on("markSeen", async (payload) => {
+    const conversationId = payload?.conversationId;
+    if (!mongoose.isValidObjectId(conversationId)) return;
     try {
+      // Clients may send this while the asynchronous room join is still pending.
+      if (!(await Conversation.exists({ _id: conversationId, participantIds: socket.auth.sub }))) return;
       await Message.updateMany(
         { conversationId, recipientId: socket.auth.sub, readAt: null },
         { $set: { readAt: new Date() } }

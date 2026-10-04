@@ -9,3 +9,9 @@ Place your image files in this folder with these exact names:
 - `product-1.png` through `product-4.png` - images for the Popular Products cards
 
 PNG, JPG, and WebP files are supported. Update the paths in `src/App.jsx` if you prefer different names.
+
+## GCash brand asset
+
+`gcash-logo.svg` is the unmodified GCash icon served by the official https://gcash.com website.
+Source: https://cdn.prod.website-files.com/6385b55675a0bd614777a5c1/6474928322d48888f6c8cfe5_biz-gcash-logo.svg
+Retrieved 2026-10-04. GCash branding belongs to its respective owner.

@@ -125,6 +125,9 @@ export default function SupplierDashboard() {
       setOrders((current) =>
         current.map((item) => (item._id === updatedOrder._id ? updatedOrder : item))
       );
+      if (updatedOrder.productId?._id) {
+        setProducts((current) => current.map((product) => product._id === updatedOrder.productId._id ? { ...product, stock: updatedOrder.productId.stock } : product));
+      }
     });
 
     return () => {

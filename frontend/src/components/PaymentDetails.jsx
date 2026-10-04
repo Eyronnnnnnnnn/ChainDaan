@@ -5,11 +5,14 @@ import "./PaymentDetails.css";
 export function ImagePreview({ file, savedUrl, alt }) {
   const preview = useRef(null);
   useEffect(() => {
-    if (!file) return;
+    if (!file) {
+      if (preview.current) preview.current.src = savedUrl || "";
+      return;
+    }
     const url = URL.createObjectURL(file);
     preview.current.src = url;
     return () => URL.revokeObjectURL(url);
-  }, [file]);
+  }, [file, savedUrl]);
   return file || savedUrl ? (
     <img
       ref={preview}
@@ -24,7 +27,7 @@ export function GCashFields({ qrUrl, values, onChange }) {
   return (
     <section className="gcash-checkout">
       <div className="payment-heading">
-        <span className="payment-brand">G</span>
+        <img className="payment-brand" src="/images/gcash-logo.svg" alt="GCash" width="72" height="61" />
         <div>
           <h3>Pay with GCash</h3>
           <p>Scan the supplier's QR code, then submit your payment details.</p>
@@ -48,6 +51,7 @@ export function GCashFields({ qrUrl, values, onChange }) {
           GCash account name
           <input
             required
+            minLength={2}
             maxLength={100}
             value={values.gcashName || ""}
             onChange={(e) => onChange({ ...values, gcashName: e.target.value })}

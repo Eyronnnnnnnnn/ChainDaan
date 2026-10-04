@@ -2,7 +2,9 @@
 .payment-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
 .payment-heading h3, .payment-heading h4, .payment-heading p { margin: 0; }
 .payment-heading p, .payment-panel p, .payment-hint { font-size: 13px; line-height: 1.6; color: var(--ios-secondary, #526575); }
-.payment-brand { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #0866ed; color: #fff; font-size: 26px; font-weight: 800; }
+.payment-brand { display: block; flex: 0 0 auto; width: 64px; height: 56px; padding: 7px; border-radius: 10px; background: #fff; object-fit: contain; }
+.gcash-checkout .payment-heading { justify-content: flex-start; }
+.gcash-checkout .payment-heading > div { flex: 1; min-width: 160px; }
 .payment-image { display: block; width: auto; max-width: min(100%, 280px); max-height: 320px; object-fit: contain; margin: 16px auto; border-radius: 12px; background: white; padding: 8px; }
 .gcash-qr { width: 220px; height: 220px; }
 .payment-badge { display: inline-flex; border-radius: 999px; padding: 6px 11px; font-size: 12px; font-weight: 600; background: var(--ios-tint, #edf5ff); color: var(--ios-blue, #1760b5); text-transform: capitalize; }

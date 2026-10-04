@@ -4,6 +4,7 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const imageList = Array.isArray(images) ? images.filter(Boolean) : [];
+  const activeIndex = Math.min(currentIndex, Math.max(0, imageList.length - 1));
 
   if (imageList.length === 0) {
     return (
@@ -29,13 +30,13 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
   const prev = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentIndex((prevIndex) => (prevIndex === 0 ? imageList.length - 1 : prevIndex - 1));
+    setCurrentIndex((activeIndex + imageList.length - 1) % imageList.length);
   };
 
   const next = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentIndex((prevIndex) => (prevIndex === imageList.length - 1 ? 0 : prevIndex + 1));
+    setCurrentIndex((activeIndex + 1) % imageList.length);
   };
 
   const goToSlide = (idx, e) => {
@@ -47,8 +48,8 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
   return (
     <div className="product-carousel">
       <img
-        src={imageList[currentIndex]}
-        alt={`${alt} (${currentIndex + 1} of ${imageList.length})`}
+        src={imageList[activeIndex]}
+        alt={`${alt} (${activeIndex + 1} of ${imageList.length})`}
         className="product-carousel-img"
         loading="lazy"
       />
@@ -76,7 +77,7 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
           <button
             key={idx}
             type="button"
-            className={`carousel-dot ${idx === currentIndex ? "active" : ""}`}
+            className={`carousel-dot ${idx === activeIndex ? "active" : ""}`}
             onClick={(e) => goToSlide(idx, e)}
             aria-label={`Go to image ${idx + 1}`}
           />
@@ -84,9 +85,8 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
       </div>
 
       <span className="carousel-counter">
-        {currentIndex + 1} / {imageList.length}
+        {activeIndex + 1} / {imageList.length}
       </span>
     </div>
   );
 }
-

@@ -11,6 +11,12 @@ Incoming Orders shows payment details and authenticated receipt previews. Suppli
 
 Receipt buffers are stored in MongoDB and excluded from order JSON and normal database projections. Only the order buyer and supplier can retrieve a receipt. The QR used for an order is saved with the payment. Payment reviews notify both participants using their authenticated Socket.IO rooms. Legacy sales reads now require authentication and are scoped to the account; legacy direct sales creation is disabled to prevent bypassing payment validation.
 
-Dark mode follows the system preference initially, remembers the user's choice across pages and reloads, and can be toggled from the dashboards or public pages. QR codes and receipts retain their original colors.
+Home, login, registration, and password recovery stay in light mode. Dashboards remember the chosen theme. QR codes, receipts, and the official GCash logo retain their original colors.
 
 Validation: `node --test backend/payment.test.js backend/payment-routes.test.js backend/tracking.test.js`, `npm.cmd --prefix frontend run lint`, and `npm.cmd --prefix frontend run build`. Browser flow was checked with mocked API responses. Verify a real QR upload, order persistence, receipt retrieval, and supplier review against the configured Cloudinary/MongoDB environment before production use. Restart/redeploy the backend along with the frontend for these API changes.
+
+Order integrity
+---------------
+Only business accounts can place orders. Quantities cannot exceed available stock. Stock is reserved when the supplier confirms an order, not while an inquiry is pending. Confirmation and cancellation update stock and order status in one MongoDB transaction. This requires MongoDB Atlas or another replica set; standalone MongoDB is not supported for these transitions. Closed orders cannot reopen, and completion requires confirmation first. Repeating a status request does not change stock again.
+
+Run the backend regression suite with `npm.cmd --prefix backend test`. Browser tests use mocked API responses; live database transactions and external services still require integration verification.

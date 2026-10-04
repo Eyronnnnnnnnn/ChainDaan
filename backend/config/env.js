@@ -5,6 +5,7 @@ const clientOrigins = (process.env.CLIENT_ORIGIN || defaultClientOrigin)
   .filter(Boolean);
 
 export const env = {
+  isProduction: process.env.NODE_ENV === "production",
   port: process.env.PORT || 4000,
   mongoUri: process.env.MONGODB_URI,
   // CLIENT_ORIGIN supports a comma-separated allowlist. The first origin is
