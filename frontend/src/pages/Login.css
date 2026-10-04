@@ -56,3 +56,10 @@
 @media(max-width: 850px) { .register-page, .login-page { grid-template-columns: 1fr; gap: 24px; max-width: 620px; padding-block: 32px; }.register-intro { padding: 0 6px; }.intro-copy h1 { font-size: 28px; margin-bottom: 12px; }.intro-copy h1 br { display: none; }.intro-copy h1 strong::after { content: ' '; }.intro-copy ul, .login-intro { display: none; }.intro-copy p { font-size: 13px; } }
 @media(max-width: 520px) { .auth-header { padding: 16px 20px; min-height: 72px; }.auth-brand { font-size: 16px; gap: 7px; }.auth-brand img { width: 30px; height: 30px; }.auth-header nav { gap: 14px; font-size: 12px; }.auth-header nav > a:first-child { display: none; }.auth-header-action { padding: 9px 10px; }.register-page { padding: 28px 16px; }.register-panel { padding: 24px 20px; border-radius: 16px; }.field-grid { grid-template-columns: 1fr; }.register-input-wrap input { font-size: 16px; }.auth-footer { gap: 12px; }.auth-brand { font-size: 14px; }.register-panel h2 { font-size: 25px; } }
 .auth-footer { background: #fff; border-top: 1px solid #e3e9f1; }
+.auth-mascot { display: block; width: 200px; height: 300px; max-width: 100%; object-fit: contain; margin: 0 auto 24px; }
+@media (max-width: 850px) {
+  .auth-mascot { width: 100px; height: 150px; margin-bottom: 16px; }
+  .login-intro { display: block; }
+  .login-intro .intro-copy { display: none; }
+  .login-intro .auth-mascot { margin-bottom: 0; }
+}

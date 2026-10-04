@@ -38,3 +38,11 @@
 @media(max-width: 760px) { .home-header { padding: 18px 20px; gap: 12px; }.home-brand { font-size: 17px; }.home-brand img { width: 32px; height: 32px; }.home-header nav { gap: 16px; }.home-header nav > a:first-child { display: none; }.home-header .home-button { padding: 10px 14px; }.home-hero { grid-template-columns: 1fr; padding: 46px 24px; gap: 36px; }.home-hero h1 { letter-spacing: -1.3px; }.home-art img { height: 260px; }.home-cards, .home-how ol { grid-template-columns: 1fr; }.home-audience, .home-how { padding: 36px 24px; }.home-start { margin: 24px; padding: 28px; flex-direction: column; align-items: flex-start; }.home-footer { padding: 26px 24px; flex-wrap: wrap; }.home-footer nav { font-size: 12px; gap: 22px; } }
 @media(max-width: 380px) { .home-brand { font-size: 14px; gap: 5px; }.home-header nav { gap: 10px; font-size: 12px; }.home-header .home-button { font-size: 12px; padding-inline: 10px; } }
 .home-footer { background: #fff; }
+.home-art-scene { position: relative; height: 350px; }
+.home-art .home-map { position: absolute; left: 0; top: 10px; width: 65%; height: 300px; }
+.home-art .home-mascot { position: absolute; right: -8px; bottom: 0; width: 59%; height: 350px; object-fit: contain; object-position: bottom; }
+@media (max-width: 760px) {
+  .home-art-scene { height: 290px; }
+  .home-art .home-map { height: 240px; }
+  .home-art .home-mascot { height: 290px; }
+}

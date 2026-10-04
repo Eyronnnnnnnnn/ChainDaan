@@ -111,6 +111,7 @@ export default function Login() {
       <AuthHeader />
       <main className="register-page">
       <section className="register-intro">
+        <img className="auth-mascot" src="/images/mascot.png" alt="Chain Daan mascot welcoming you" />
 
         <div className="intro-copy">
           <h1>
@@ -204,6 +205,7 @@ export function SignIn() {
       <AuthHeader />
       <main className="register-page login-page">
       <section className="register-intro login-intro">
+        <img className="auth-mascot" src="/images/mascot.png" alt="Chain Daan mascot welcoming you" />
 
         <div className="intro-copy">
           <h1>
