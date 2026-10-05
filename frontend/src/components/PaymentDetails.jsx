@@ -187,6 +187,7 @@ export default function PaymentDetails({ order, supplier = false, onUpdated }) {
           <dt>Account name</dt>
           <dd>{payment.gcashName}</dd>
         </div>
+        <div></div>
         <div>
           <dt>Mobile number</dt>
           <dd>{payment.gcashPhone}</dd>
