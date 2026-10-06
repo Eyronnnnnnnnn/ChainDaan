@@ -13,7 +13,7 @@ import Home from "./pages/Home.jsx";
 const ProtectedRoute = ({ children }) => localStorage.getItem("chaindaan_token") ? children : <Navigate to="/login" replace />;
 
 function OAuthResult() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.hash.slice(1) || window.location.search);
   const token = params.get("oauthToken");
   const encodedUser = params.get("oauthUser");
   let user = null;
@@ -36,7 +36,7 @@ function OAuthResult() {
   }, [token, user]);
 
   const message = params.get("oauthError") || (token ? "Social sign-in returned invalid account data." : "Social sign-in could not be completed.");
-  return <main className="oauth-result" role="status">{user ? "Completing Social sign-in..." : message}</main>;
+  return <main className="oauth-result"><section className="register-panel"><h1>{user ? "Signing you in" : "Sign-in unsuccessful"}</h1><p role="status">{user ? "Completing social sign-in..." : message}</p>{!user && <a className="home-button" href="/login">Back to sign in</a>}</section></main>;
 }
 
 function ThemeControl() {

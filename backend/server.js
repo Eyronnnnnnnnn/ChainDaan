@@ -327,11 +327,12 @@ function createToken(profile) {
   return `${payload}.${signature}`;
 }
 
-function createOAuthState({ role, intent }) {
+function createOAuthState({ role, intent, origin }) {
   const payload = Buffer.from(
     JSON.stringify({
       role,
       intent,
+      origin,
       exp: Date.now() + 1000 * 60 * 10,
       nonce: crypto.randomBytes(16).toString("hex"),
     }),
@@ -344,7 +345,8 @@ function createOAuthState({ role, intent }) {
 }
 
 function readOAuthState(state) {
-  const [payload, signature] = (state || "").split(".");
+  if (typeof state !== "string") return null;
+  const [payload, signature] = state.split(".");
   if (!payload || !signature) return null;
   const expected = crypto
     .createHmac("sha256", authSecret)
@@ -367,7 +369,7 @@ function readOAuthState(state) {
 
 function oauthFailure(response, message) {
   response.redirect(
-    `${env.clientOrigin}/oauth/callback?oauthError=${encodeURIComponent(message)}`,
+    `${response.locals.oauthOrigin || env.clientOrigin}/oauth/callback?oauthError=${encodeURIComponent(message)}`,
   );
 }
 
@@ -569,10 +571,9 @@ app.post(
   }),
 );
 app.get("/api/auth/google", (request, response) => {
+  response.locals.oauthOrigin = env.clientOrigins.includes(request.query.origin) ? request.query.origin : env.clientOrigin;
   if (!env.googleClientId || !env.googleClientSecret)
-    return response.status(503).json({
-      error: "Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to the API environment.",
-    });
+    return oauthFailure(response, "Google sign-in is currently unavailable. Please sign in with your email or contact support.");
   const role = request.query.role;
   const intent = request.query.intent;
   if (!["business", "supplier"].includes(role) || !["signin", "signup"].includes(intent))
@@ -584,7 +585,7 @@ app.get("/api/auth/google", (request, response) => {
     response_type: "code",
     scope: "openid email profile",
     prompt: "select_account",
-    state: createOAuthState({ role, intent }),
+    state: createOAuthState({ role, intent, origin: response.locals.oauthOrigin }),
   });
   response.redirect(authorizationUrl.toString());
 });
@@ -592,56 +593,62 @@ app.get(
   "/api/auth/google/callback",
   asyncRoute(async (request, response) => {
     const state = readOAuthState(request.query.state);
+    if (state && env.clientOrigins.includes(state.origin)) response.locals.oauthOrigin = state.origin;
     if (!state) return oauthFailure(response, "Google sign-in expired. Please try again.");
     if (request.query.error)
       return oauthFailure(response, "Google sign-in was cancelled or not authorized.");
     if (!request.query.code)
       return oauthFailure(response, "Google did not return an authorization code.");
 
-    const tokenResult = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        code: request.query.code,
-        client_id: env.googleClientId,
-        client_secret: env.googleClientSecret,
-        redirect_uri: env.googleRedirectUri,
-        grant_type: "authorization_code",
-      }),
-    });
-    const tokenData = await tokenResult.json();
-    if (!tokenResult.ok || !tokenData.access_token)
-      return oauthFailure(response, "Google sign-in could not be completed. Please try again.");
-
-    const profileResult = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    const googleProfile = await profileResult.json();
-    if (!profileResult.ok || !googleProfile.sub || !googleProfile.email || googleProfile.email_verified === false)
-      return oauthFailure(response, "Google must share a verified email address to sign in.");
-
-    const email = googleProfile.email.trim().toLowerCase();
-    let profile = await Profile.findOne({
-      $or: [{ googleId: googleProfile.sub }, { email }],
-    });
-    if (!profile && state.intent === "signin")
-      return oauthFailure(response, "No Chain Daan account is linked to this Google account. Create an account first.");
-    if (!profile) {
-      profile = await Profile.create({
-        role: state.role,
-        fullName: googleProfile.name?.trim() || email,
-        name: googleProfile.name?.trim() || email,
-        email,
-        googleId: googleProfile.sub,
+    try {
+      const tokenResult = await fetch("https://oauth2.googleapis.com/token", {
+        signal: AbortSignal.timeout(15000),
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          code: request.query.code,
+          client_id: env.googleClientId,
+          client_secret: env.googleClientSecret,
+          redirect_uri: env.googleRedirectUri,
+          grant_type: "authorization_code",
+        }),
       });
-    } else if (!profile.googleId) {
-      profile.googleId = googleProfile.sub;
-      await profile.save();
+      const tokenData = await tokenResult.json();
+      if (!tokenResult.ok || !tokenData.access_token)
+        return oauthFailure(response, "Google sign-in could not be completed. Please try again.");
+
+      const profileResult = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+        signal: AbortSignal.timeout(15000),
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      });
+      const googleProfile = await profileResult.json();
+      if (!profileResult.ok || !googleProfile.sub || !googleProfile.email || googleProfile.email_verified !== true)
+        return oauthFailure(response, "Google must share a verified email address to sign in.");
+
+      const email = googleProfile.email.trim().toLowerCase();
+      let profile = await Profile.findOne({
+        $or: [{ googleId: googleProfile.sub }, { email }],
+      });
+      if (!profile && state.intent === "signin")
+        return oauthFailure(response, "No Chain Daan account is linked to this Google account. Create an account first.");
+      if (!profile) {
+        profile = await Profile.create({
+          role: state.role,
+          fullName: googleProfile.name?.trim() || email,
+          name: googleProfile.name?.trim() || email,
+          email,
+          googleId: googleProfile.sub,
+        });
+      } else if (!profile.googleId) {
+        profile.googleId = googleProfile.sub;
+        await profile.save();
+      }
+      const redirectUrl = new URL(`${response.locals.oauthOrigin || env.clientOrigin}/oauth/callback`);
+      redirectUrl.hash = new URLSearchParams({ oauthToken: createToken(profile), oauthUser: Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url") }).toString();
+      response.redirect(redirectUrl.toString());
+    } catch {
+      return oauthFailure(response, "Google sign-in could not be completed. Please try again.");
     }
-    const redirectUrl = new URL(`${env.clientOrigin}/oauth/callback`);
-    redirectUrl.searchParams.set("oauthToken", createToken(profile));
-    redirectUrl.searchParams.set("oauthUser", Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url"));
-    response.redirect(redirectUrl.toString());
   }),
 );
 app.get("/api/auth/facebook", (request, response) => {

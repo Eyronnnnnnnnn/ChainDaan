@@ -2,14 +2,15 @@ import { useState } from "react";
 
 export default function ProductImageCarousel({ images = [], alt = "Product image" }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState([]);
 
-  const imageList = Array.isArray(images) ? images.filter(Boolean) : [];
+  const imageList = Array.isArray(images) ? images.filter((image) => typeof image === "string" && image.trim() && !failedImages.includes(image)) : [];
   const activeIndex = Math.min(currentIndex, Math.max(0, imageList.length - 1));
 
   if (imageList.length === 0) {
     return (
       <div className="product-carousel product-gallery-empty">
-        <span>📷 No photos</span>
+        <img src="/images/product-placeholder.svg" alt="Product photo unavailable" className="product-carousel-img" />
       </div>
     );
   }
@@ -22,6 +23,7 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
           alt={alt}
           className="product-carousel-img"
           loading="lazy"
+          onError={() => setFailedImages((failed) => [...failed, imageList[activeIndex]])}
         />
       </div>
     );
@@ -52,6 +54,7 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
         alt={`${alt} (${activeIndex + 1} of ${imageList.length})`}
         className="product-carousel-img"
         loading="lazy"
+          onError={() => setFailedImages((failed) => [...failed, imageList[activeIndex]])}
       />
 
       <button
@@ -80,6 +83,7 @@ export default function ProductImageCarousel({ images = [], alt = "Product image
             className={`carousel-dot ${idx === activeIndex ? "active" : ""}`}
             onClick={(e) => goToSlide(idx, e)}
             aria-label={`Go to image ${idx + 1}`}
+            aria-pressed={idx === activeIndex}
           />
         ))}
       </div>

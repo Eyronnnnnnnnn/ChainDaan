@@ -557,13 +557,15 @@ function ProductDirectory({ products, search, setSearch, onSelect, onOrder }) {
       </div>
       <div className="supplier-grid">
         {visibleProducts.map((product) => (
-          <article className="supplier-card" key={product._id}>
+          <article className="supplier-card browse-product-card" key={product._id}>
+            <ProductImageCarousel images={product.images} alt={product.name} />
             <p className="dashboard-kicker">{product.category || "Product"}</p>
             <h3>{product.name}</h3>
             <p>
               By <strong>{product.supplier}</strong>
             </p>
             <strong className="business-price">₱{Number(product.price || 0).toLocaleString()}</strong>
+            <p className="product-stock">{Number(product.stock) > 0 ? `${product.stock} available` : "Out of stock"}</p>
             <div style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
               <button
                 className="contact-button"
@@ -576,6 +578,7 @@ function ProductDirectory({ products, search, setSearch, onSelect, onOrder }) {
               <button
                 className="primary-action"
                 onClick={() => onOrder(product)}
+                disabled={Number(product.stock || 0) <= 0}
                 type="button"
                 style={{ minHeight: "35px", fontSize: "11px", padding: "0 14px", display: "inline-flex", alignItems: "center", gap: 5 }}
               >

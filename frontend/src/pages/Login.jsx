@@ -101,9 +101,9 @@ export default function Login() {
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
-    const apiUrl = import.meta.env.VITE_API_URL || "";
+    const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
     const service = provider === "Google" ? "google" : "facebook";
-    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signup`);
+    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signup&origin=${encodeURIComponent(window.location.origin)}`);
   }
 
   return (
@@ -196,9 +196,9 @@ export function SignIn() {
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
   function continueWith(provider) {
-    const apiUrl = import.meta.env.VITE_API_URL || "";
+    const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
     const service = provider === "Google" ? "google" : "facebook";
-    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signin`);
+    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signin&origin=${encodeURIComponent(window.location.origin)}`);
   }
   return (
     <div className="auth-shell">

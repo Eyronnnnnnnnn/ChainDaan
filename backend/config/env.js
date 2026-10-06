@@ -3,6 +3,11 @@ const clientOrigins = (process.env.CLIENT_ORIGIN || defaultClientOrigin)
   .split(",")
   .map((origin) => origin.trim().replace(/\/$/, ""))
   .filter(Boolean);
+if (process.env.NODE_ENV !== "production") {
+  for (const origin of [defaultClientOrigin, "http://127.0.0.1:5173"]) {
+    if (!clientOrigins.includes(origin)) clientOrigins.push(origin);
+  }
+}
 
 export const env = {
   isProduction: process.env.NODE_ENV === "production",

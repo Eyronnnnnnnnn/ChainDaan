@@ -623,3 +623,8 @@ footer div {
     padding-right: 12px;
   }
 }
+
+.oauth-result { min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: #f3f6fc; }
+.oauth-result .register-panel { width: min(100%, 480px); }
+.oauth-result h1 { font-size: 24px; }
+.oauth-result p { margin: 16px 0 24px; line-height: 1.6; }
