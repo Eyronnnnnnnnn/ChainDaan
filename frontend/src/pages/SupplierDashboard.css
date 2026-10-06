@@ -3327,10 +3327,11 @@
 }
 
 .browse-product-card { min-width: 0; overflow: hidden; gap: 10px; }
-.browse-product-card .product-carousel { border-radius: 12px; height: auto; aspect-ratio: 4 / 3; flex-shrink: 0; }
+.browse-product-card .product-carousel { border-radius: 10px; width: 100%; height: 120px; flex-shrink: 0; }
+.browse-product-card .product-carousel-img { object-fit: contain; padding: 8px; }
 .browse-product-card h3 { overflow-wrap: anywhere; }
 .browse-product-card .product-stock { font-size: 12px; color: #64748b; margin: 0 0 8px; }
-.browse-product-card button { min-height: 42px; }
+.browse-product-card > div:last-child > button { min-height: 42px; }
 .browse-product-card button:disabled { opacity: .5; cursor: not-allowed; }
 .product-carousel:focus-within .carousel-btn { opacity: 1; }
 @media (hover: none) { .product-carousel .carousel-btn { opacity: 1; } }

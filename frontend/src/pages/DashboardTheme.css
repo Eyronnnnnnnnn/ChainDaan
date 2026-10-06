@@ -167,6 +167,31 @@
 /* Keep avatar initials and editable values independent of surrounding labels. */
 .dashboard-shell .profile-avatar > span { color: #fff; }
 .dashboard-shell :is(.profile-fields input, .profile-fields select, .profile-fields textarea, .product-modal input, .product-modal select) { font-weight: 400; letter-spacing: normal; }
+
+/* Compact product browsing and checkout. */
+.dashboard-shell .browse-product-card { padding: 16px; border-radius: 16px; gap: 8px; }
+.dashboard-shell .browse-product-card h3 { font-size: 15px; }
+.dashboard-shell .browse-product-card > p { margin: 0; font-size: 12px; }
+.dashboard-shell .order-modal { width: min(100%, 440px); padding: 20px; border-radius: 16px; }
+.order-modal > form { display: grid; gap: 12px; min-width: 0; }
+.dashboard-shell .order-modal h2 { padding-right: 32px; font-size: 20px; }
+.dashboard-shell .order-modal .order-subtitle { margin: -6px 0 0; overflow-wrap: anywhere; }
+.order-modal .order-product-snapshot { margin: 0; padding: 10px; gap: 10px; background: var(--ios-inset); border-color: var(--ios-line); }
+.order-modal :is(.snapshot-img, .snapshot-placeholder) { width: 44px; height: 44px; flex: 0 0 44px; object-fit: contain; }
+.order-modal .order-product-snapshot > div { min-width: 0; }
+.order-modal .order-product-snapshot h4 { color: var(--ios-text); overflow-wrap: anywhere; }
+.order-modal .modal-fields { gap: 10px; }
+.order-modal label { min-width: 0; margin: 0; gap: 6px; font-size: 11px; letter-spacing: normal; }
+.dashboard-shell .order-modal :is(input, select, textarea) { width: 100%; min-width: 0; border-radius: 8px; font: inherit; font-size: 13px; color: var(--ios-text); background: var(--ios-inset); }
+.order-modal textarea { padding: 10px; border: 1px solid var(--ios-line); resize: vertical; }
+.order-modal .quantity-control button { flex-shrink: 0; }
+.order-modal .order-calc-card { margin: 0; background: var(--ios-inset); border-color: var(--ios-line); }
+.order-modal :is(.calc-row, .summary-row) { gap: 12px; flex-wrap: wrap; color: var(--ios-text); }
+.order-modal .modal-submit { margin-top: 0; width: 100%; }
+@media (max-width: 480px) {
+  .dashboard-shell .order-modal { padding: 18px 16px; }
+  .dashboard-shell .order-modal :is(input, select, textarea) { font-size: 16px; }
+}
 .dashboard-shell .notification-panel strong { color: var(--ios-text); }
 .dashboard-shell .notification-panel span { color: var(--ios-secondary); }
 .dashboard-shell .brand-mark { width: 120%; }

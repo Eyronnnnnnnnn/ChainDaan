@@ -140,16 +140,15 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <p className="dashboard-kicker">ORDER / INQUIRE</p>
-            <h2>Buy from {supplierName}</h2>
+            <h2>Place an order</h2>
             <p className="order-subtitle">
-              Fill in your order requirements and delivery location for this product.
+              From {supplierName}
             </p>
 
             {/* Product Snapshot */}
             <div className="order-product-snapshot">
               {product.images?.[0] ? (
-                <img src={product.images[0]} alt={product.name} className="snapshot-img" />
+                <img src={product.images[0]} alt={product.name} className="snapshot-img" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/images/product-placeholder.svg"; }} />
               ) : (
                 <div className="snapshot-placeholder">📦</div>
               )}
@@ -168,7 +167,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
             {/* Quantity Selector */}
             <div className="modal-fields">
               <label>
-                QUANTITY (PCS/UNITS) *
+                Quantity *
                 <div className="quantity-control">
                   <button
                     type="button"
@@ -200,7 +199,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
               </label>
 
               <label>
-                PAYMENT METHOD
+                Payment method
                 <select value={paymentMethod} disabled={submitting} onChange={(e) => { setPaymentMethod(e.target.value); setGcash({}); setError(""); }}>
                   <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
                   <option value="GCash" disabled={!product.gcashQrUrl}>GCash{!product.gcashQrUrl ? " (QR not available)" : ""}</option>
@@ -212,7 +211,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
             {/* Delivery Details */}
             <div className="modal-fields">
               <label>
-                MUNICIPALITY *
+                Municipality *
                 <input
                   value={deliveryTown}
                   onChange={(e) => setDeliveryTown(e.target.value)}
@@ -222,7 +221,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
               </label>
 
               <label>
-                CONTACT PHONE NUMBER
+                Contact phone
                 <input
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
@@ -233,7 +232,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
             </div>
 
             <label>
-              EXACT DELIVERY ADDRESS (STREET, BARANGAY, LANDMARK) *
+              Delivery address *
               <input
                 value={deliveryAddress}
                 onChange={(e) => setDeliveryAddress(e.target.value)}
@@ -243,7 +242,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
             </label>
 
             <label className="full-field">
-              SPECIAL INSTRUCTIONS / NOTES TO SUPPLIER
+              Notes (optional)
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -259,7 +258,7 @@ export default function OrderModal({ product, supplier, currentUser = {}, onClos
                 <span>₱{unitPrice.toLocaleString()} × {quantity}</span>
               </div>
               <div className="calc-row total-row">
-                <b>Total Estimated Amount:</b>
+                <b>Estimated total:</b>
                 <strong>₱{totalAmount.toLocaleString()}</strong>
               </div>
             </div>
