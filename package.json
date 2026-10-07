@@ -1,6 +1,8 @@
 {
   "private": true,
   "scripts": {
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "check": "npm test && npm run lint && npm run build",
     "start": "npm --prefix backend run start",
     "dev": "npm --prefix frontend run dev",
     "server": "npm --prefix backend run server",

@@ -15,6 +15,8 @@ import { Server as SocketServer } from "socket.io";
 import { env } from "./config/env.js";
 import { validatePayment, validImage } from "./payment.js";
 import { changeOrderStatus } from "./order-status.js";
+import { handleHttpError } from "./http-error.js";
+import { validateAuthInput } from "./auth-input.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,7 +60,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_request, file, callback) => {
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return callback(new Error("Choose a JPG, PNG or WEBP image up to 5 MB."));
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return callback(Object.assign(new Error("Choose a JPG, PNG or WEBP image up to 5 MB."), { status: 400 }));
     callback(null, true);
   },
 });
@@ -107,6 +109,7 @@ const uploadLimiter = createRateLimiter(15 * 60 * 1000, 10);
 app.use("/api", apiLimiter);
 app.use("/api/auth", authLimiter);
 app.use(express.json({ limit: "100kb", strict: true, type: "application/json" }));
+app.use("/api/auth", validateAuthInput);
 
 app.get("/", (_request, response) =>
   response.json({
@@ -833,11 +836,7 @@ app.get(
 app.post(
   "/api/profiles",
   requireAuth,
-  asyncRoute(async (request, response) =>
-    response
-      .status(201)
-      .json(publicProfile(await Profile.create(request.body))),
-  ),
+  (_request, response) => response.status(410).json({ error: "Create accounts through /api/auth/register." }),
 );
 app.patch(
   "/api/profiles/:id",
@@ -1257,15 +1256,7 @@ app.post(
   requireAuth,
   (_request, response) => response.status(410).json({ error: "Create orders through /api/orders so payment validation is applied." }),
 );
-app.use((error, _request, response, _next) => {
-  console.error("Request failed:", error);
-  if (response.headersSent) return;
-
-  const status = error?.statusCode || error?.status || 400;
-  response.status(status >= 400 && status < 600 ? status : 500).json({
-    error: error?.message || "The request could not be processed.",
-  });
-});
+app.use(handleHttpError);
 
 if (!mongoUri) {
   console.error(

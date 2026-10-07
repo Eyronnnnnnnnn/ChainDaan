@@ -4,6 +4,14 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const source = fs.readFileSync(new URL("./server.js", import.meta.url), "utf8").replace(/\r/g, "");
+test("legacy profile creation cannot bypass registration", () => {
+  let handler;
+  const block = source.slice(source.indexOf('app.post(\n  "/api/profiles"'), source.indexOf('app.patch(\n  "/api/profiles/:id"'));
+  vm.runInNewContext(block, { app: { post: (_path, ...handlers) => { handler = handlers.at(-1); } }, requireAuth() {} });
+  const result = response();
+  handler({ body: { role: "supplier", passwordHash: "injected" } }, result);
+  assert.equal(result.code, 410);
+});
 function response() {
   return { code: 200, status(code) { this.code = code; return this; }, json(data) { this.body = data; return this; } };
 }

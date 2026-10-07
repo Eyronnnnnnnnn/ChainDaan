@@ -1,16 +1,21 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { getCurrentUser } from "./lib/session.js";
+import { routeRedirect } from "./lib/route-access.js";
 
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useTheme } from "./lib/theme.js";
 import "./Theme.css";
 import "./App.css";
 import Login, { ForgotPassword, ResetPassword, SignIn } from "./pages/Login.jsx";
-import SupplierDashboard from "./pages/SupplierDashboard.jsx";
-import BusinessDashboard from "./pages/BusinessDashboard.jsx";
-import BusinessProfile from "./pages/BusinessProfile.jsx";
-import Legal from "./pages/Legal.jsx";
+const SupplierDashboard = lazy(() => import("./pages/SupplierDashboard.jsx"));
+const BusinessDashboard = lazy(() => import("./pages/BusinessDashboard.jsx"));
+const BusinessProfile = lazy(() => import("./pages/BusinessProfile.jsx"));
+const Legal = lazy(() => import("./pages/Legal.jsx"));
 import Home from "./pages/Home.jsx";
-const ProtectedRoute = ({ children }) => localStorage.getItem("chaindaan_token") ? children : <Navigate to="/login" replace />;
+const ProtectedRoute = ({ children, role }) => {
+  const redirect = routeRedirect(localStorage.getItem("chaindaan_token"), getCurrentUser(), role);
+  return redirect ? <Navigate to={redirect} replace /> : children;
+};
 
 function OAuthResult() {
   const params = new URLSearchParams(window.location.hash.slice(1) || window.location.search);
@@ -52,6 +57,7 @@ function App() {
   return (
     <Router>
       <ThemeControl />
+      <Suspense fallback={<p role="status">Loading page...</p>}>
       <Routes>
         <Route path="/register" element={<Login />} />
         <Route path="/login" element={<SignIn />} />
@@ -60,11 +66,12 @@ function App() {
         <Route path="/oauth/callback" element={<OAuthResult />} />
         <Route path="/privacy" element={<Legal />} />
         <Route path="/terms" element={<Legal />} />
-        <Route path="/supplier-dashboard" element={<ProtectedRoute><SupplierDashboard /></ProtectedRoute>} />
-        <Route path="/business-dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
-        <Route path="/business-profile" element={<ProtectedRoute><BusinessProfile /></ProtectedRoute>} />
+        <Route path="/supplier-dashboard" element={<ProtectedRoute role="supplier"><SupplierDashboard /></ProtectedRoute>} />
+        <Route path="/business-dashboard" element={<ProtectedRoute role="business"><BusinessDashboard /></ProtectedRoute>} />
+        <Route path="/business-profile" element={<ProtectedRoute role="business"><BusinessProfile /></ProtectedRoute>} />
         <Route path="*" element={<Home />} />
       </Routes>
+      </Suspense>
     </Router>
   );
 }
