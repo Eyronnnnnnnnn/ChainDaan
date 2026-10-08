@@ -3,9 +3,10 @@ import "./Home.css";
 
 export default function Home() {
   return <div className="home-page">
+    <div className="home-grid" aria-hidden="true"><div className="home-grid-lines" /><span className="home-grid-trace home-grid-trace-horizontal" /><span className="home-grid-trace home-grid-trace-vertical" /></div>
     <a className="home-skip" href="#main">Skip to content</a>
     <header className="home-header">
-      <Link className="home-brand" to="/"><img src="/images/logo.png" alt="" />Chain Daan</Link>
+      <Link className="home-brand" to="/" aria-label="Chain Daan home"><img src="/images/logo.png" alt="" /><span className="home-wordmark">Chain<span>Daan</span><i aria-hidden="true" /></span></Link>
       <nav aria-label="Main navigation"><a href="#how-it-works">How it works</a><Link to="/login">Log in</Link><Link className="home-button" to="/register">Get started</Link></nav>
     </header>
     <main id="main">

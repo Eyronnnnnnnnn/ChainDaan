@@ -1,8 +1,23 @@
-﻿.home-page { color-scheme: light; background: #fff; color: #182b47; }
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&display=swap');
+.home-page { color-scheme: light; background: #fff; color: #182b47; }
+
+.home-page { position: relative; isolation: isolate; }
+.home-header, .home-page > main, .home-footer { position: relative; z-index: 1; }
+.home-grid { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse at 80% 20%, #eaf2ff 0%, transparent 58%); }
+.home-grid-lines { position: absolute; inset: -48px; background-image: linear-gradient(to right, rgb(62 105 172 / 16%) 1px, transparent 1px), linear-gradient(to bottom, rgb(62 105 172 / 16%) 1px, transparent 1px); background-size: 48px 48px; animation: home-grid-drift 8s linear infinite; }
+.home-grid-trace { position: absolute; display: block; opacity: 0; }
+.home-grid-trace-horizontal { top: 192px; left: -180px; width: 180px; height: 1px; background: linear-gradient(90deg, transparent, #81aaf0, transparent); animation: home-grid-travel-x 12s linear infinite; }
+.home-grid-trace-vertical { top: -180px; left: 80%; width: 1px; height: 180px; background: linear-gradient(transparent, #81aaf0, transparent); animation: home-grid-travel-y 10s linear 3s infinite; }
+@keyframes home-grid-drift { to { transform: translate(48px, 48px); } }
+@keyframes home-grid-travel-x { 10%, 85% { opacity: .7; } 100% { transform: translateX(calc(100vw + 180px)); opacity: 0; } }
+@keyframes home-grid-travel-y { 10%, 75% { opacity: .7; } 100% { transform: translateY(1030px); opacity: 0; } }
 .home-page a:focus-visible, .auth-shell :is(a,button,input):focus-visible { outline: 3px solid #2670df; outline-offset: 4px; }
 .home-header, .home-footer { max-width: 1200px; margin: auto; display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; gap: 24px; }
 .home-header { border-bottom: 1px solid #e6ebf1; }
-.home-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; }
+.home-brand { display: inline-flex; flex-shrink: 0; align-items: center; gap: 10px; }
+.home-wordmark { display: inline-flex; align-items: baseline; color: #142c4d; font-family: 'Manrope', 'Segoe UI', sans-serif; font-weight: 800; font-size: 27px; letter-spacing: -1.3px; line-height: 1.2; }
+.home-wordmark > span { color: #2459d3; font-weight: 600; }
+.home-wordmark > i { width: 5px; height: 5px; margin-left: 3px; border-radius: 50%; background: #2459d3; }
 .home-brand img { width: 42px; height: 42px; object-fit: contain; }
 .home-header nav, .home-footer nav { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 500; }
 .home-button { display: inline-flex; justify-content: center; align-items: center; gap: 22px; min-height: 48px; padding: 13px 23px; border-radius: 10px; color: white; background: #2459d3; font-weight: 600; font-size: 14px; transition: background .2s; }
@@ -42,7 +57,16 @@
 .home-art .home-map { position: absolute; left: 0; top: 0; width: 78%; height: 420px; }
 .home-art .home-mascot { position: absolute; right: 0; bottom: 0; width: 50%; height: 350px; object-fit: contain; object-position: bottom; }
 @media (max-width: 760px) {
+  .home-wordmark { font-size: 23px; letter-spacing: -1.1px; }
   .home-art-scene { height: 340px; }
   .home-art .home-map { height: 340px; }
   .home-art .home-mascot { height: 290px; }
+}
+@media (max-width: 380px) {
+  .home-wordmark { font-size: 20px; letter-spacing: -1px; }
+  .home-wordmark > i { width: 4px; height: 4px; margin-left: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-grid-lines, .home-grid-trace { animation: none; }
+  .home-grid-trace { display: none; }
 }
