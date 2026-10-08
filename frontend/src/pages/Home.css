@@ -2,6 +2,8 @@
 .home-page { color-scheme: light; background: #fff; color: #182b47; }
 
 .home-page { position: relative; isolation: isolate; }
+.home-intro { position: relative; isolation: isolate; }
+.home-intro > section { position: relative; z-index: 1; }
 .home-header, .home-page > main, .home-footer { position: relative; z-index: 1; }
 .home-grid { position: absolute; z-index: 0; inset: 0; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse at 80% 20%, #eaf2ff 0%, transparent 58%); }
 .home-grid-lines { position: absolute; inset: -48px; background-image: linear-gradient(to right, rgb(62 105 172 / 16%) 1px, transparent 1px), linear-gradient(to bottom, rgb(62 105 172 / 16%) 1px, transparent 1px); background-size: 48px 48px; animation: home-grid-drift 8s linear infinite; }
@@ -26,6 +28,17 @@
 .home-eyebrow { color: #3662a9; font-size: 11px; letter-spacing: 1.8px; font-weight: 700; margin: 0 0 18px; }
 .home-hero h1 { font-size: clamp(36px, 4vw, 54px); letter-spacing: -2px; line-height: 1.18; margin: 0 0 24px; font-weight: 700; }
 .home-hero h1 em { color: #2459d3; font-style: normal; }
+.home-headline-finish { white-space: nowrap; }
+.home-truck { display: inline-block; width: 1.65em; margin-left: .16em; vertical-align: -.12em; line-height: 0; }
+.home-truck svg { width: 100%; overflow: visible; }
+.home-truck-body { animation: home-truck-bounce .65s ease-in-out infinite alternate; }
+.home-truck-wheel { animation: home-truck-roll 1s linear infinite; }
+.home-truck-road { animation: home-truck-road .7s linear infinite; }
+.home-truck-speed { animation: home-truck-speed .8s ease-in-out infinite alternate; }
+@keyframes home-truck-bounce { to { transform: translateY(-2px); } }
+@keyframes home-truck-roll { to { transform: rotate(360deg); } }
+@keyframes home-truck-road { to { stroke-dashoffset: 16; } }
+@keyframes home-truck-speed { to { opacity: .3; transform: translateX(-3px); } }
 .home-description { font-size: 16px; line-height: 1.85; color: #58677b; max-width: 520px; }
 .home-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; margin-top: 30px; }
 .home-secondary { color: #2459d3; font-size: 14px; font-weight: 600; }
@@ -69,4 +82,5 @@
 @media (prefers-reduced-motion: reduce) {
   .home-grid-lines, .home-grid-trace { animation: none; }
   .home-grid-trace { display: none; }
+  .home-truck-body, .home-truck-wheel, .home-truck-road, .home-truck-speed { animation: none; }
 }
