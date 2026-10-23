@@ -1,22 +1,22 @@
 /* Shared iOS-inspired appearance; responsive layout remains in SupplierDashboard.css. */
 .dashboard-shell {
-  --ios-bg: #f5f5f7;
+  --ios-bg: #f4f7ff;
   --ios-surface: #fff;
   --ios-inset: #f2f2f7;
   --ios-glass: rgb(255 255 255 / 80%);
   --ios-text: #1d1d1f;
   --ios-secondary: #68686e;
-  --ios-blue: #007aff;
-  --ios-tint: #edf5ff;
-  --ios-line: rgb(60 60 67 / 10%);
-  --ios-shadow: 0 2px 4px rgb(0 0 0 / 2%), 0 12px 32px rgb(0 0 0 / 3%);
+  --ios-blue: var(--blue, #2459d3);
+  --ios-tint: #edf2ff;
+  --ios-line: #e0e7f0;
+  --ios-shadow: 0 8px 28px rgb(24 43 71 / 6%);
   --dashboard-border: var(--ios-line);
   --dashboard-muted: var(--ios-secondary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   color: var(--ios-text);
   background: radial-gradient(ellipse at 90% 0, #eaf2ff 0, transparent 42%), var(--ios-bg);
-  letter-spacing: -.015em;
+  letter-spacing: 0;
 }
 .dashboard-shell.dark-mode {
   --ios-bg: #09090b;
@@ -25,7 +25,7 @@
   --ios-glass: rgb(28 28 30 / 85%);
   --ios-text: #f5f5f7;
   --ios-secondary: #a1a1aa;
-  --ios-blue: #64aaff;
+  --ios-blue: #81acff;
   --ios-tint: #182d49;
   --ios-line: rgb(235 235 245 / 12%);
   --ios-shadow: 0 8px 28px rgb(0 0 0 / 16%);
@@ -42,8 +42,8 @@
 .dashboard-shell .supplier-mini b { font-size: 12px; }
 .dashboard-shell .supplier-mini span { color: var(--ios-secondary); }
 .dashboard-shell .dashboard-nav { gap: 7px; }
-.dashboard-shell :is(.dashboard-nav button, .sidebar-bottom button) { border: 1px solid transparent; border-radius: 13px; min-height: 46px; color: var(--ios-secondary); font-size: 13px; font-weight: 500; transition: background 160ms ease, color 160ms ease; }
-.dashboard-shell .dashboard-nav button.active { background: #007aff; color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgb(0 122 255 / 22%); }
+.dashboard-shell :is(.dashboard-nav button, .sidebar-bottom button) { border: 1px solid transparent; border-radius: 10px; min-height: 46px; color: var(--ios-secondary); font-size: 13px; font-weight: 500; transition: background 160ms ease, color 160ms ease; }
+.dashboard-shell .dashboard-nav button.active { background: var(--ios-blue); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgb(36 89 211 / 20%); }
 .dashboard-shell .dashboard-nav button:hover:not(.active), .dashboard-shell .sidebar-bottom button:hover { background: var(--ios-inset); }
 .dashboard-shell .dashboard-nav em { background: #ff9f0a; color: #fff; border-radius: 8px; font-size: 10px; }
 .dashboard-shell .sidebar-bottom { border-color: var(--ios-line); }
@@ -59,16 +59,16 @@
 .dashboard-shell .welcome-row p { font-size: 14px; color: var(--ios-secondary); }
 .dashboard-shell .welcome-row .dashboard-kicker { font-size: 10px; margin-bottom: 12px; }
 .dashboard-shell :is(.primary-action, .contact-button, .secondary-action, .btn-order-now, .btn-action, .delete-account-button) { min-height: 44px; border-radius: 999px; font-weight: 600; font-size: 13px; padding: 11px 20px; letter-spacing: -.01em; transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
-.dashboard-shell :is(.primary-action, .btn-order-now) { background: #007aff; color: #fff; box-shadow: 0 3px 8px rgb(0 122 255 / 15%); }
-.dashboard-shell :is(.primary-action, .btn-order-now):hover:not(:disabled) { background: #0066db; box-shadow: 0 5px 14px rgb(0 122 255 / 22%); }
+.dashboard-shell :is(.primary-action, .btn-order-now) { background: var(--ios-blue); color: #fff; box-shadow: 0 3px 8px rgb(36 89 211 / 15%); }
+.dashboard-shell :is(.primary-action, .btn-order-now):hover:not(:disabled) { background: #1946ad; box-shadow: 0 5px 14px rgb(36 89 211 / 22%); }
 .dashboard-shell :is(.contact-button, .secondary-action) { background: var(--ios-tint); color: var(--ios-blue); border-color: transparent; }
-.dashboard-shell .contact-button:hover { background: #007aff; color: #fff; }
+.dashboard-shell .contact-button:hover { background: var(--ios-blue); color: #fff; }
 .dashboard-shell button:active:not(:disabled) { transform: scale(.98); }
 .dashboard-shell .delete-account-button { background: transparent; color: #e43a35; border-color: rgb(255 59 48 / 22%); }
 .dashboard-shell :is(.dashboard-card, .metric-card, .supplier-card, .order-card, .messages-layout, .product-modal, .notification-panel, .supplier-detail-product) { background: var(--ios-surface); border: 1px solid var(--ios-line); border-radius: 24px; box-shadow: var(--ios-shadow); backdrop-filter: none; -webkit-backdrop-filter: none; }
 .dashboard-shell .metric-grid { gap: 18px; margin-bottom: 28px; }
 .dashboard-shell .metric-card { position: relative; grid-template-columns: minmax(0, 1fr) 38px; gap: 10px; padding: 22px; }
-.dashboard-shell .metric-icon { grid-column: 2; grid-row: 1; width: 38px; height: 38px; border-radius: 12px; background: #eaf3ff; color: #007aff; }
+.dashboard-shell .metric-icon { grid-column: 2; grid-row: 1; width: 38px; height: 38px; border-radius: 10px; background: #eaf0ff; color: var(--ios-blue); }
 .dashboard-shell .metric-card > span:not(.metric-icon) { grid-column: 1; grid-row: 1; align-self: center; color: var(--ios-secondary); font-size: 12px; font-weight: 500; }
 .dashboard-shell .metric-card b { grid-column: 1 / -1; font-size: clamp(30px, 3vw, 40px); font-weight: 650; line-height: 1.1; letter-spacing: -.055em; }
 .dashboard-shell .metric-card small { grid-column: 1 / -1; color: var(--ios-secondary); font-size: 11px; }
@@ -121,10 +121,10 @@
 .dashboard-shell .chat-messages { background: var(--ios-bg); }
 .dashboard-shell :is(.conversation-head, .message-compose) { background: var(--ios-surface); border-color: var(--ios-line); }
 .dashboard-shell .message-bubble { background: var(--ios-inset); color: var(--ios-text); border-radius: 19px; font-size: 13px; }
-.dashboard-shell .message-bubble.mine { background: #007aff; color: #fff; border-bottom-right-radius: 6px; }
+.dashboard-shell .message-bubble.mine { background: var(--ios-blue); color: #fff; border-bottom-right-radius: 6px; }
 .dashboard-shell .message-bubble.theirs { border-bottom-left-radius: 6px; }
 .dashboard-shell .message-compose input { background: var(--ios-inset); border-color: transparent; color: var(--ios-text); }
-.dashboard-shell .message-compose button.send-button { background: #007aff; box-shadow: none; }
+.dashboard-shell .message-compose button.send-button { background: var(--ios-blue); box-shadow: none; }
 .dashboard-shell .message-compose button.send-button:disabled { background: var(--ios-inset); color: var(--ios-secondary); }
 .dashboard-shell .empty-state { color: var(--ios-secondary); border-color: var(--ios-line); padding: 48px 24px; }
 .dashboard-shell .empty-state p { color: var(--ios-secondary); font-size: 13px; }

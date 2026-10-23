@@ -4,13 +4,16 @@ body {
   margin: 0;
   min-width: 320px;
   font-family: 'Poppins', 'Segoe UI', sans-serif;
-  color: #11265f;
-  background: #fff;
+  color: var(--navy, #11265f);
+  background: var(--surface, #fff);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * { box-sizing: border-box; }
 a { color: inherit; text-decoration: none; }
 button, input { font: inherit; }
+button { color: inherit; }
 
 #root {
   animation: page-enter 420ms ease-out both;

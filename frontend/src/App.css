@@ -1,9 +1,16 @@
 :root {
-  --blue: #2155d9;
+  --blue: #2459d3;
+  --blue-hover: #1946ad;
   --navy: #10245e;
   --gold: #ffbd00;
-  --pale: #eef3ff;
+  --pale: #f4f7ff;
   --muted: #647493;
+  --surface: #ffffff;
+  --line: #e0e7f0;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 8px 28px rgb(24 43 71 / 6%);
 }
 html { scroll-behavior: smooth; }
 .site-shell section,
