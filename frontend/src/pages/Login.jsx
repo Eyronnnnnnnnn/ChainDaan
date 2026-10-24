@@ -31,13 +31,49 @@ function FacebookLogo() {
   );
 }
 
-function SocialButtons({ onProvider }) {
+function SocialButtons({ onProvider, loadingProvider }) {
   return (
     <div className="social-buttons">
-      <button type="button" onClick={() => onProvider("Google")}><GoogleLogo /> Continue with Google</button>
-      <button type="button" onClick={() => onProvider("Facebook")}><FacebookLogo /> Continue with Facebook</button>
+      <button type="button" disabled={Boolean(loadingProvider)} onClick={() => onProvider("Google")}><GoogleLogo /> {loadingProvider === "Google" ? "Connecting to Google..." : "Continue with Google"}</button>
+      <button type="button" disabled={Boolean(loadingProvider)} onClick={() => onProvider("Facebook")}><FacebookLogo /> {loadingProvider === "Facebook" ? "Connecting to Facebook..." : "Continue with Facebook"}</button>
     </div>
   );
+}
+
+async function waitForApi(apiUrl) {
+  const deadline = Date.now() + 90_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${apiUrl}/api/health`, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(20_000),
+      });
+      const contentType = response.headers.get("content-type") || "";
+      if (response.ok && contentType.includes("application/json")) return;
+    } catch {
+      // A sleeping Render service may reset the first request while it starts.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+  }
+  throw new Error("The sign-in server is taking too long to start. Please try again in a moment.");
+}
+
+async function beginSocialAuth(provider, role, intent, setError, setLoadingProvider) {
+  const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  if (import.meta.env.PROD && !apiUrl) {
+    setError(`${provider} sign-in is not connected to the API yet. Set VITE_API_URL to your backend's HTTPS address in Vercel, then redeploy the frontend.`);
+    return;
+  }
+  setError("");
+  setLoadingProvider(provider);
+  try {
+    await waitForApi(apiUrl);
+    const service = provider === "Google" ? "google" : "facebook";
+    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=${intent}&origin=${encodeURIComponent(window.location.origin)}`);
+  } catch (error) {
+    setError(error.message || "The sign-in server could not be reached. Please try again.");
+    setLoadingProvider("");
+  }
 }
 
 function AuthHeader() {
@@ -83,6 +119,7 @@ export default function Login() {
   const [form, setForm] = useState({ fullName: "", name: "", email: "", phone: "", town: "", category: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState("");
   const isBusiness = role === "business";
   const update = (event) => { setForm({ ...form, [event.target.name]: event.target.value }); setError(""); };
   async function register(event) {
@@ -100,11 +137,7 @@ export default function Login() {
       navigate(data.user.role === "business" ? "/business-dashboard" : "/supplier-dashboard");
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
-  function continueWith(provider) {
-    const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-    const service = provider === "Google" ? "google" : "facebook";
-    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signup&origin=${encodeURIComponent(window.location.origin)}`);
-  }
+  function continueWith(provider) { beginSocialAuth(provider, role, "signup", setError, setLoadingProvider); }
 
   return (
     <div className="auth-shell">
@@ -165,7 +198,7 @@ export default function Login() {
           </button>
         </form>
         <div className="continue-divider"><span>or continue with</span></div>
-        <SocialButtons onProvider={continueWith} />
+        <SocialButtons onProvider={continueWith} loadingProvider={loadingProvider} />
         <p className="sign-in">Already have an account? <a href="/login">Sign in</a></p>
       </section>
       </main>
@@ -180,6 +213,7 @@ export function SignIn() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState("");
   const update = (event) => { setForm({ ...form, [event.target.name]: event.target.value }); setError(""); };
   async function signIn(event) {
     event.preventDefault();
@@ -195,11 +229,7 @@ export function SignIn() {
       navigate(data.user.role === "business" ? "/business-dashboard" : "/supplier-dashboard");
     } catch (requestError) { setError(requestError.message); } finally { setSaving(false); }
   }
-  function continueWith(provider) {
-    const apiUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-    const service = provider === "Google" ? "google" : "facebook";
-    window.location.assign(`${apiUrl}/api/auth/${service}?role=${role}&intent=signin&origin=${encodeURIComponent(window.location.origin)}`);
-  }
+  function continueWith(provider) { beginSocialAuth(provider, role, "signin", setError, setLoadingProvider); }
   return (
     <div className="auth-shell">
       <AuthHeader />
@@ -240,7 +270,7 @@ export function SignIn() {
           <button className="sign-in-button" type="submit" disabled={saving}>{saving ? "Signing in..." : "Sign In to Dashboard"}</button>
         </form>
         <div className="continue-divider"><span>or continue with</span></div>
-        <SocialButtons onProvider={continueWith} />
+        <SocialButtons onProvider={continueWith} loadingProvider={loadingProvider} />
         <p className="sign-in register-prompt">Don&apos;t have an account? <a href="/register">Create one free</a></p>
       </section>
       </main>

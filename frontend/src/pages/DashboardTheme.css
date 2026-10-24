@@ -1,15 +1,19 @@
 /* Shared iOS-inspired appearance; responsive layout remains in SupplierDashboard.css. */
 .dashboard-shell {
-  --ios-bg: #f4f7ff;
+  --ios-bg: #f6f8fc;
   --ios-surface: #fff;
-  --ios-inset: #f2f2f7;
+  --ios-inset: #f3f6fb;
   --ios-glass: rgb(255 255 255 / 80%);
-  --ios-text: #1d1d1f;
-  --ios-secondary: #68686e;
+  --ios-text: #17243b;
+  --ios-secondary: #68758b;
   --ios-blue: var(--blue, #2459d3);
   --ios-tint: #edf2ff;
-  --ios-line: #e0e7f0;
-  --ios-shadow: 0 8px 28px rgb(24 43 71 / 6%);
+  --ios-line: #e4eaf3;
+  --ios-shadow: 0 8px 28px rgb(24 43 71 / 5%);
+  --ios-hover: #edf2fa;
+  --ios-success: #168454;
+  --ios-warning: #ad6a08;
+  --ios-danger: #c43f4f;
   --dashboard-border: var(--ios-line);
   --dashboard-muted: var(--ios-secondary);
   font-family: 'Poppins', 'Segoe UI', sans-serif;
@@ -19,20 +23,24 @@
   letter-spacing: 0;
 }
 .dashboard-shell.dark-mode {
-  --ios-bg: #09090b;
-  --ios-surface: #1c1c1e;
-  --ios-inset: #29292d;
-  --ios-glass: rgb(28 28 30 / 85%);
-  --ios-text: #f5f5f7;
-  --ios-secondary: #a1a1aa;
+  --ios-bg: #111827;
+  --ios-surface: #1b2535;
+  --ios-inset: #151e2c;
+  --ios-glass: rgb(27 37 53 / 94%);
+  --ios-text: #edf3ff;
+  --ios-secondary: #a8b5ca;
   --ios-blue: #81acff;
-  --ios-tint: #182d49;
-  --ios-line: rgb(235 235 245 / 12%);
-  --ios-shadow: 0 8px 28px rgb(0 0 0 / 16%);
+  --ios-tint: #24344d;
+  --ios-line: #344258;
+  --ios-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+  --ios-hover: #26364e;
+  --ios-success: #69d5a2;
+  --ios-warning: #f1bd66;
+  --ios-danger: #ff9ba6;
   --dashboard-border: var(--ios-line);
   --dashboard-muted: var(--ios-secondary);
   color: var(--ios-text);
-  background: radial-gradient(ellipse at 90% 0, #12223b 0, transparent 40%), var(--ios-bg);
+  background: radial-gradient(ellipse at 90% 0, #203453 0, transparent 42%), var(--ios-bg);
 }
 .dashboard-shell :is(h1, h2, h3, h4, b, strong) { color: var(--ios-text); }
 .dashboard-shell :is(.dashboard-sidebar, .dashboard-topbar) { background: var(--ios-glass); border-color: var(--ios-line); box-shadow: none; backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); }
@@ -195,3 +203,87 @@
 .dashboard-shell .notification-panel strong { color: var(--ios-text); }
 .dashboard-shell .notification-panel span { color: var(--ios-secondary); }
 .dashboard-shell .brand-mark { width: 120%; }
+
+/* Unified premium dashboard finish. These tokens override legacy page-level
+   color rules so both workspaces and the business profile stay in sync. */
+.dashboard-shell {
+  color-scheme: light;
+  min-height: 100vh;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ios-text);
+  background: radial-gradient(ellipse at 88% -12%, #e8efff 0, transparent 38%), var(--ios-bg);
+  -webkit-font-smoothing: antialiased;
+}
+.dashboard-shell.dark-mode { color-scheme: dark; background: radial-gradient(ellipse at 88% -12%, #253b60 0, transparent 40%), var(--ios-bg); }
+.dashboard-shell :is(h1, h2, h3, h4, b, strong) { color: var(--ios-text); }
+.dashboard-shell :is(p, small, .dashboard-kicker, .supplier-mini span, .metric-card > span:not(.metric-icon), .metric-card small, .product-row span:not(.order-status-badge), .product-row small, .product-table-row span, .product-table-head, .supplier-card > p, .chat-preview span, .chat-preview small, .profile-fields label) { color: var(--ios-secondary); }
+.dashboard-shell :is(.dashboard-sidebar, .dashboard-topbar) { background: var(--ios-glass); border-color: var(--ios-line); box-shadow: 0 8px 28px rgb(24 43 71 / 4%); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); }
+.dashboard-shell.dark-mode :is(.dashboard-sidebar, .dashboard-topbar) { background: var(--ios-glass); box-shadow: 0 8px 28px rgb(0 0 0 / 16%); }
+.dashboard-shell .dashboard-sidebar { padding: 24px 16px; }
+.dashboard-shell .dashboard-topbar { min-height: 78px; }
+.dashboard-shell .dashboard-content { padding-top: 32px; }
+.dashboard-shell .dashboard-topbar h1 { font-size: 19px; font-weight: 650; letter-spacing: -.025em; }
+.dashboard-shell .dashboard-kicker { font-size: 9px; font-weight: 700; letter-spacing: .14em; }
+.dashboard-shell .supplier-mini { border-radius: 14px; background: var(--ios-surface); border-color: var(--ios-line); box-shadow: none; }
+.dashboard-shell :is(.dashboard-nav button, .sidebar-bottom button) { min-height: 44px; border-radius: 11px; color: var(--ios-secondary); font-size: 12px; font-weight: 550; }
+.dashboard-shell .dashboard-nav button.active { color: #fff; background: var(--ios-blue); box-shadow: 0 5px 14px rgb(36 89 211 / 22%); }
+.dashboard-shell.dark-mode .dashboard-nav button.active { color: #fff; }
+.dashboard-shell :is(.dashboard-nav button:hover:not(.active), .sidebar-bottom button:hover) { color: var(--ios-text); background: var(--ios-hover); }
+.dashboard-shell :is(.icon-button, .theme-toggle, .mobile-menu-button, .mobile-sidebar-close) { width: 38px; height: 38px; color: var(--ios-secondary); background: var(--ios-surface); border: 1px solid var(--ios-line); border-radius: 12px; transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease; }
+.dashboard-shell :is(.icon-button, .theme-toggle, .mobile-menu-button, .mobile-sidebar-close):hover { color: var(--ios-blue); background: var(--ios-tint); border-color: color-mix(in srgb, var(--ios-blue) 24%, var(--ios-line)); }
+.dashboard-shell .dashboard-card,
+.dashboard-shell .metric-card,
+.dashboard-shell .supplier-card,
+.dashboard-shell .order-card,
+.dashboard-shell .messages-layout,
+.dashboard-shell .product-modal,
+.dashboard-shell .notification-panel,
+.dashboard-shell .supplier-detail-product,
+.dashboard-shell .profile-preview-card { color: var(--ios-text); background: var(--ios-surface); border: 1px solid var(--ios-line); border-radius: 18px; box-shadow: var(--ios-shadow); }
+.dashboard-shell :is(.dashboard-card, .supplier-card, .order-card) { padding: 23px; }
+.dashboard-shell .metric-card { padding: 20px; }
+.dashboard-shell .metric-card b { font-size: 32px; font-weight: 700; letter-spacing: -.045em; }
+.dashboard-shell .metric-icon { border-radius: 11px; background: #eaf0ff; color: var(--ios-blue); }
+.dashboard-shell.dark-mode .metric-icon { background: #2a3d5c; color: #a9c6ff; }
+.dashboard-shell .card-heading h3 { font-size: 16px; font-weight: 650; letter-spacing: -.02em; }
+.dashboard-shell :is(.primary-action, .btn-order-now, .contact-button, .secondary-action, .btn-action, .delete-account-button) { min-height: 42px; border-radius: 11px; font-family: inherit; font-weight: 600; font-size: 12px; }
+.dashboard-shell :is(.primary-action, .btn-order-now) { color: #fff; background: var(--ios-blue); box-shadow: 0 4px 12px rgb(36 89 211 / 18%); }
+.dashboard-shell :is(.contact-button, .secondary-action) { color: var(--ios-blue); background: var(--ios-tint); border: 1px solid transparent; }
+.dashboard-shell :is(.contact-button, .secondary-action):hover { color: #fff; background: var(--ios-blue); }
+.dashboard-shell :is(input, select, textarea, .directory-search, .chat-search) { color: var(--ios-text); background: var(--ios-inset); border-color: var(--ios-line); border-radius: 10px; }
+.dashboard-shell input::placeholder, .dashboard-shell textarea::placeholder { color: var(--ios-secondary); opacity: .8; }
+.dashboard-shell :is(input, select, textarea):focus { border-color: var(--ios-blue); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ios-blue) 17%, transparent); }
+.dashboard-shell :is(.product-row, .product-table-row, .order-card-head, .order-card-body, .supplier-detail-head, .supplier-detail-body, .sidebar-bottom, .chat-list, .conversation-head, .message-compose) { border-color: var(--ios-line); }
+.dashboard-shell :is(.chat-list, .conversation-head, .message-compose, .chat-messages) { background: var(--ios-surface); }
+.dashboard-shell .chat-messages { background: var(--ios-bg); }
+.dashboard-shell .chat-preview.selected { background: var(--ios-tint); }
+.dashboard-shell .message-bubble { color: var(--ios-text); background: var(--ios-inset); }
+.dashboard-shell .message-bubble.mine { color: #fff; background: var(--ios-blue); }
+.dashboard-shell :is(.orders-filter-pills, .period-filter) { background: var(--ios-inset); border-color: var(--ios-line); border-radius: 11px; }
+.dashboard-shell :is(.orders-filter-pills button, .period-filter button) { border-radius: 8px; color: var(--ios-secondary); }
+.dashboard-shell :is(.orders-filter-pills button.active, .period-filter button.selected) { color: var(--ios-blue); background: var(--ios-surface); border-color: var(--ios-line); }
+.dashboard-shell .profile-cover { background: linear-gradient(120deg, var(--ios-tint), var(--ios-surface)); border-color: var(--ios-line); }
+.dashboard-shell :is(.profile-meta-chip, .supplier-products span, .category-pill, .info-chip, .order-product-snapshot, .order-summary-box, .order-calc-card) { color: var(--ios-secondary); background: var(--ios-inset); border-color: var(--ios-line); }
+.dashboard-shell .order-modal :is(input, select, textarea) { color: var(--ios-text); background: var(--ios-inset); border-color: var(--ios-line); }
+.dashboard-shell .notification-panel { color: var(--ios-text); background: var(--ios-surface); border-color: var(--ios-line); }
+.dashboard-shell .notification-panel button { color: var(--ios-blue); background: var(--ios-tint); }
+.dashboard-shell .empty-state { color: var(--ios-secondary); border-color: var(--ios-line); }
+.dashboard-shell .empty-state p { color: var(--ios-secondary); }
+.dashboard-shell .form-error { color: var(--ios-danger); }
+.dashboard-shell .order-status-badge.pending { color: var(--ios-warning); }
+.dashboard-shell .order-status-badge.confirmed, .dashboard-shell .order-status-badge.completed { color: var(--ios-success); }
+.dashboard-shell .order-status-badge.cancelled { color: var(--ios-danger); }
+.dashboard-shell.dark-mode :is(.dashboard-card, .metric-card, .supplier-card, .order-card, .messages-layout, .product-modal, .notification-panel, .supplier-detail-product, .profile-preview-card) { background: var(--ios-surface); border-color: var(--ios-line); }
+.dashboard-shell.dark-mode :is(.profile-fields input, .profile-fields select, .profile-fields textarea, .product-modal input, .product-modal select, .order-modal input, .order-modal select, .order-modal textarea, .message-compose input, .directory-search input) { color: var(--ios-text); background: var(--ios-inset); border-color: var(--ios-line); }
+.dashboard-shell.dark-mode :is(.order-status-badge.pending, .order-status-badge.confirmed) { background: var(--ios-tint); }
+.dashboard-shell.dark-mode :is(.profile-cover, .profile-preview-card, .info-chip, .order-product-snapshot, .order-summary-box, .order-calc-card, .quantity-control) { background: var(--ios-inset); border-color: var(--ios-line); }
+.dashboard-shell.dark-mode .brand-logo-frame { background: #fff; border-radius: 12px; }
+.dashboard-shell :is(button, a, input, select, textarea):focus-visible { outline: 3px solid color-mix(in srgb, var(--ios-blue) 68%, white); outline-offset: 3px; }
+@media (max-width: 650px) {
+  .dashboard-shell .dashboard-content { padding-top: 24px; }
+  .dashboard-shell :is(.dashboard-card, .supplier-card, .order-card) { padding: 18px; border-radius: 16px; }
+  .dashboard-shell .metric-card { padding: 16px; border-radius: 16px; }
+  .dashboard-shell .dashboard-sidebar { background: var(--ios-glass); }
+}

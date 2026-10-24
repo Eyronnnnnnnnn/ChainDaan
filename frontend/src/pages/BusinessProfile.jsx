@@ -17,6 +17,7 @@ import {
   CheckIcon,
 } from "../components/Icons.jsx";
 import "./SupplierDashboard.css";
+import "./DashboardTheme.css";
 
 export default function BusinessProfile() {
   const currentUser = getCurrentUser() || {};

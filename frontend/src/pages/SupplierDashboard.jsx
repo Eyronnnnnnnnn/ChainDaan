@@ -1078,6 +1078,7 @@ function Messages({
 }
 
 function SupplierSales({ products, orders = [] }) {
+  const [darkMode] = useTheme();
   const [period, setPeriod] = useState("Monthly");
   const saleOrders = orders.filter((order) => ["confirmed", "completed"].includes(order.status));
   const now = new Date();
@@ -1133,13 +1134,13 @@ function SupplierSales({ products, orders = [] }) {
       {
         label: chartData.title,
         data: chartData.values,
-        borderColor: "#43b8bd",
-        backgroundColor: "#43b8bd",
+        borderColor: darkMode ? "#91b5ff" : "#2459d3",
+        backgroundColor: darkMode ? "#91b5ff" : "#2459d3",
         borderWidth: 3,
         pointRadius: 3,
         pointHoverRadius: 5,
         pointBackgroundColor: "#ffffff",
-        pointBorderColor: "#43b8bd",
+        pointBorderColor: darkMode ? "#91b5ff" : "#2459d3",
         pointBorderWidth: 2,
         tension: 0.35,
         fill: false,
@@ -1161,13 +1162,13 @@ function SupplierSales({ products, orders = [] }) {
     },
     scales: {
       x: {
-        grid: { color: "#dfe4eb" },
-        ticks: { color: "#69758a", font: { size: 12 } },
+        grid: { color: darkMode ? "#344258" : "#e4eaf3" },
+        ticks: { color: darkMode ? "#a8b5ca" : "#68758b", font: { size: 12 } },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: "#69758a", font: { size: 12 }, callback: (value) => formatPeso(Number(value)) },
-        grid: { color: "#dfe4eb" },
+        ticks: { color: darkMode ? "#a8b5ca" : "#68758b", font: { size: 12 }, callback: (value) => formatPeso(Number(value)) },
+        grid: { color: darkMode ? "#344258" : "#e4eaf3" },
       },
     },
   };

@@ -101,7 +101,24 @@ const createRateLimiter = (windowMs, limit) =>
     message: rateLimitMessage,
   });
 const apiLimiter = createRateLimiter(15 * 60 * 1000, 300);
-const authLimiter = createRateLimiter(15 * 60 * 1000, 15);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: rateLimitMessage,
+  handler(request, response) {
+    if (request.method === "GET" && request.originalUrl.split("?")[0] === "/api/auth/google") {
+      const origin = env.clientOrigins.includes(request.query.origin)
+        ? request.query.origin
+        : env.clientOrigin;
+      const callback = new URL(`${origin}/oauth/callback`);
+      callback.searchParams.set("oauthError", "Too many sign-in attempts. Please wait 15 minutes, then try Google again.");
+      return response.redirect(callback.toString());
+    }
+    return response.status(429).json(rateLimitMessage);
+  },
+});
 const recoveryLimiter = createRateLimiter(60 * 60 * 1000, 5);
 const feedbackLimiter = createRateLimiter(60 * 60 * 1000, 5);
 const uploadLimiter = createRateLimiter(15 * 60 * 1000, 10);
@@ -655,10 +672,11 @@ app.get(
   }),
 );
 app.get("/api/auth/facebook", (request, response) => {
+  response.locals.oauthOrigin = env.clientOrigins.includes(request.query.origin)
+    ? request.query.origin
+    : env.clientOrigin;
   if (!env.facebookAppId || !env.facebookAppSecret)
-    return response.status(503).json({
-      error: "Facebook sign-in is not configured. Add FACEBOOK_APP_ID and FACEBOOK_APP_SECRET to the API environment.",
-    });
+    return oauthFailure(response, "Facebook sign-in is currently unavailable. Please sign in with your email or contact support.");
   const role = request.query.role;
   const intent = request.query.intent;
   if (!['business', 'supplier'].includes(role) || !['signin', 'signup'].includes(intent))
@@ -669,7 +687,7 @@ app.get("/api/auth/facebook", (request, response) => {
     redirect_uri: env.facebookRedirectUri,
     response_type: "code",
     scope: "email,public_profile",
-    state: createOAuthState({ role, intent }),
+    state: createOAuthState({ role, intent, origin: response.locals.oauthOrigin }),
   });
   response.redirect(authorizationUrl.toString());
 });
@@ -677,6 +695,7 @@ app.get(
   "/api/auth/facebook/callback",
   asyncRoute(async (request, response) => {
     const state = readOAuthState(request.query.state);
+    if (state && env.clientOrigins.includes(state.origin)) response.locals.oauthOrigin = state.origin;
     if (!state) return oauthFailure(response, "Facebook sign-in expired. Please try again.");
     if (request.query.error)
       return oauthFailure(response, "Facebook sign-in was cancelled or not authorized.");
@@ -723,9 +742,11 @@ app.get(
       profile.facebookId = facebookProfile.id;
       await profile.save();
     }
-    const redirectUrl = new URL(`${env.clientOrigin}/oauth/callback`);
-    redirectUrl.searchParams.set("oauthToken", createToken(profile));
-    redirectUrl.searchParams.set("oauthUser", Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url"));
+    const redirectUrl = new URL(`${response.locals.oauthOrigin || env.clientOrigin}/oauth/callback`);
+    redirectUrl.hash = new URLSearchParams({
+      oauthToken: createToken(profile),
+      oauthUser: Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url"),
+    }).toString();
     response.redirect(redirectUrl.toString());
   }),
 );
