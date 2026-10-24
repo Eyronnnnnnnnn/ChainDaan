@@ -620,6 +620,7 @@ app.get(
     if (!request.query.code)
       return oauthFailure(response, "Google did not return an authorization code.");
 
+    let oauthStage = "token_exchange";
     try {
       const tokenResult = await fetch("https://oauth2.googleapis.com/token", {
         signal: AbortSignal.timeout(15000),
@@ -634,9 +635,19 @@ app.get(
         }),
       });
       const tokenData = await tokenResult.json();
-      if (!tokenResult.ok || !tokenData.access_token)
-        return oauthFailure(response, "Google sign-in could not be completed. Please try again.");
+      if (!tokenResult.ok || !tokenData.access_token) {
+        const providerError = typeof tokenData.error === "string" ? tokenData.error : "unknown_error";
+        console.error("Google OAuth token exchange failed", {
+          status: tokenResult.status,
+          providerError,
+        });
+        const message = providerError === "invalid_client"
+          ? "Google sign-in configuration could not be verified. Please contact support."
+          : "Google sign-in could not be completed. Please start again from the sign-in page.";
+        return oauthFailure(response, message);
+      }
 
+      oauthStage = "profile_request";
       const profileResult = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
         signal: AbortSignal.timeout(15000),
         headers: { Authorization: `Bearer ${tokenData.access_token}` },
@@ -645,6 +656,7 @@ app.get(
       if (!profileResult.ok || !googleProfile.sub || !googleProfile.email || googleProfile.email_verified !== true)
         return oauthFailure(response, "Google must share a verified email address to sign in.");
 
+      oauthStage = "account_link";
       const email = googleProfile.email.trim().toLowerCase();
       let profile = await Profile.findOne({
         $or: [{ googleId: googleProfile.sub }, { email }],
@@ -666,7 +678,12 @@ app.get(
       const redirectUrl = new URL(`${response.locals.oauthOrigin || env.clientOrigin}/oauth/callback`);
       redirectUrl.hash = new URLSearchParams({ oauthToken: createToken(profile), oauthUser: Buffer.from(JSON.stringify(publicProfile(profile))).toString("base64url") }).toString();
       response.redirect(redirectUrl.toString());
-    } catch {
+    } catch (error) {
+      console.error("Google OAuth callback failed", {
+        stage: oauthStage,
+        name: error instanceof Error ? error.name : "UnknownError",
+        code: typeof error?.code === "string" ? error.code : undefined,
+      });
       return oauthFailure(response, "Google sign-in could not be completed. Please try again.");
     }
   }),

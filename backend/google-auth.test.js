@@ -14,6 +14,7 @@ function setup(overrides = {}) {
     createOAuthState: (state) => JSON.stringify(state),
     readOAuthState: () => ({ origin: "http://localhost:5173", intent: "signin" }),
     oauthFailure: (res, error) => { res.error = error; },
+    console: { error: () => {} },
     fetch: async () => { throw new Error("Network unavailable"); },
     ...overrides,
   };
@@ -43,4 +44,10 @@ test("Google callback rejects profiles without verified email", async () => {
   const res = response();
   await routes["/api/auth/google/callback"]({ query: { state: "valid", code: "code" } }, res);
   assert.match(res.error, /verified email/);
+});
+test("Google callback identifies an invalid OAuth client configuration", async () => {
+  const routes = setup({ fetch: async () => ({ ok: false, status: 401, json: async () => ({ error: "invalid_client" }) }) });
+  const res = response();
+  await routes["/api/auth/google/callback"]({ query: { state: "valid", code: "code" } }, res);
+  assert.match(res.error, /configuration could not be verified/);
 });
